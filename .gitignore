@@ -1,0 +1,7 @@
+__pycache__/
+*.log
+.venv
+.idea
+config.py
+data/media
+data/db.sqlite3
