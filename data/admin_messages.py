@@ -1,6 +1,6 @@
 # menu motion
 ADMIN_BUTTON_MAIN_MENU="⬆️Main menu⬆️"
-ADMIN_BUTTON_MAIN_ADMIN_MENU='🛠️Admin menu🛠️'
+ADMIN_BUTTON_MAIN_ADMIN_MENU='🛠️Admin menu test🛠️'
 ADMIN_BUTTON_BACK_TO_MAIN_ADMIN_MENU='⬆️Admin menu⬆️'
 
 
