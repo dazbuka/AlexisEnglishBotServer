@@ -1,15 +1,8 @@
-from aiogram.fsm.state import State
-import asyncio
-from aiogram import Bot, Dispatcher
-from aiogram.types import Message
+from aiogram.types import InlineKeyboardButton
 import app.database.requests as rq
-from config import bot, logger
-import data.common_messages as cmsg
-from app.database.models import async_session
-from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import Message, CallbackQuery
-import re
-from datetime import datetime
+from config import logger
+from aiogram.types import Message, CallbackQuery, ContentType
+from app.handlers.common_settings import *
 
 
 def logger_decorator(func):
@@ -34,275 +27,263 @@ async def message_answer(source: Message | CallbackQuery, message_text, *args, *
     return bot_mess_num
 
 
-# функция отправки медиа пользователю, ответ на колл
 @logger_decorator
-async def send_any_media_to_user_with_kb(bot : Bot, user_tg_id, media_type, caption = None, file_id = None, reply_kb = None):
-    match media_type:
-        case 'text':
-            mess_id = await bot.send_message(chat_id=user_tg_id,
-                                             text=caption,
-                                             reply_markup=reply_kb)
-        case 'photo':
-            mess_id = await bot.send_photo(chat_id=user_tg_id,
-                                           photo=file_id,
-                                           caption=caption,
-                                           reply_markup=reply_kb)
-        case 'video':
-            mess_id = await bot.send_video(chat_id=user_tg_id,
-                                           video=file_id,
-                                           caption=caption,
-                                           reply_markup=reply_kb)
-        case _:
-            mess_id = await bot.send_message(chat_id=user_tg_id,
-                                             text='Возникли проблемы с отправкой сообщения',
-                                             reply_markup=reply_kb)
+async def mess_answer(source: Message | CallbackQuery, media_type: str, media_id: str, message_text: str, reply_markup, *args, **kwargs):
+    if isinstance(source, CallbackQuery):
+        common_source = source.message
+    elif isinstance(source, Message):
+        common_source = source
+    else:
+        logger.info(f'function *message_answer* have no source{source}')
+        common_source = source
 
-    # last = await rq.get_user_last_message_id(user_tg_id)
-    # logger.info(f'admin utils last {last} - {caption}')
-    # try:
-    #     await bot.delete_message(chat_id=user_tg_id, message_id=last)
-    #     logger.info(f'admin utils удалил {last} - {caption}')
-    # except TelegramBadRequest as e:
-    #     logger.error(f'ошибка удаления {e}')
+    if media_type == MediaType.TEXT.value:
+        mess = await common_source.answer(text=message_text, reply_markup=reply_markup, *args, **kwargs)
+    elif media_type == MediaType.PHOTO.value:
+        mess = await common_source.answer_photo(photo=media_id, caption=message_text, reply_markup=reply_markup, *args, **kwargs)
+    elif media_type == MediaType.VIDEO.value:
+        mess = await common_source.answer_video(video=media_id, caption=message_text, reply_markup=reply_markup, *args, **kwargs)
+    else:
+        mess = await common_source.answer(text=message_text, reply_markup=reply_markup, *args, **kwargs)
 
-    logger.info(f'now  {mess_id.message_id}')
-    await rq.update_user_last_message_id(user_tg_id=user_tg_id, message_id=mess_id.message_id)
-    return mess_id
+    bot_mess_num = mess.message_id
+    await rq.update_user_last_message_id(user_tg_id=source.from_user.id, message_id=bot_mess_num)
+    return bot_mess_num
 
 
-async def count_user_tasks_by_tg_id(user_tg_id):
-    all_tasks = await rq.get_tasks_by_filters(user_tg_id=user_tg_id, sent=True, media_task_only=True)
-    # последнее отправленное номер ид
-    last_send_task_num = all_tasks[-1].id if all_tasks else None
-    # все задачи вне зависимости от выполнения
-    all_tasks = await rq.get_tasks_by_filters(user_tg_id=user_tg_id)
-    last_task_num = all_tasks[-1].id if all_tasks else None
-    # все задачи
-    all_tasks_count = len(all_tasks) if all_tasks else 0
-    # сегодняшние задачи
-    today_tasks = await rq.get_tasks_by_filters(user_tg_id=user_tg_id, sent=False, daily_tasks_only=True)
-    today_tasks_count = len(today_tasks) if today_tasks else 0
-    # пропущенные задачи
-    missed_tasks = await rq.get_tasks_by_filters(user_tg_id=user_tg_id, sent=False, missed_tasks_only=True)
-    missed_tasks_count = len(missed_tasks) if missed_tasks else 0
-    # будущие задачи
-    future_tasks = await rq.get_tasks_by_filters(user_tg_id=user_tg_id, sent=False, future_tasks_only=True)
-    future_tasks_count = len(future_tasks) if future_tasks else 0
-
-    # создаем дикт
-    count_tasks = {
-        'all' : all_tasks_count,
-        'daily': today_tasks_count,
-        'missed': missed_tasks_count,
-        'future': future_tasks_count,
-        'last' : last_task_num,
-        'last_sent': last_send_task_num
-    }
-    # возвращаем дикт
-    return count_tasks
-
-
-def get_content_info(message: Message):
-    content_type = None
-    file_id = None
-
-    if message.photo:
-        content_type = "photo"
-        file_id = message.photo[-1].file_id
-    elif message.video:
-        content_type = "video"
-        file_id = message.video.file_id
-    elif message.audio:
-        content_type = "audio"
-        file_id = message.audio.file_id
-    elif message.document:
-        content_type = "document"
-        file_id = message.document.file_id
-    elif message.voice:
-        content_type = "voice"
-        file_id = message.voice.file_id
-    elif message.text:
-        content_type = "text"
-
-    content_text = message.text or message.caption
-    return {'content_type': content_type, 'file_id': file_id, 'content_text': content_text}
-
-
-async def get_text_from_word_adding_state(state):
+# стейт текст билдер
+async def state_text_builder(state):
+    # получаем данные, хранящиеся в стейте
     st_data = await state.get_data()
+    # конечное сообщение - пустое
+    message_text = ''
 
-    word = st_data.get("word")
-    word_text = f'Введено слово: {word}\n' if word else ''
+    if 'author_id' in st_data:
+        author_id = st_data.get('author_id')
+        author = await rq.get_users_by_filters(user_id=author_id)
+        text = author.ident_name
+        if text:
+            message_text += f'Автор:\n<b>{text}</b>\n'
 
-    author = st_data.get("author")
-    author_text = f'ID aвторa: {author}\n' if author else ''
+    if 'input_source_name_state' in st_data:
+        source = (st_data.get("input_source_name_state")).input_text
+        text = source
+        if text:
+            message_text += f'Источник:\n<b>{text}</b>\n'
 
-    level = st_data.get("level")
-    level_text = f'Уровень: {level}\n' if level else ''
+    if 'input_word_state' in st_data:
+        word = (st_data.get("input_word_state")).input_text
+        text = word
+        if text:
+            message_text += f'Слово:\n<b>{text}</b>\n'
 
-    part = st_data.get("part")
-    part_text = f'Часть речи: {part}\n' if part else ''
+    if 'input_group_state' in st_data:
+        word = (st_data.get("input_group_state")).input_text
+        text = word
+        if text:
+            message_text += f'Группа:\n<b>{text}</b>\n'
 
-    definition = st_data.get("definition")
-    definition_text  = f'Определение: {definition}\n' if definition else ''
+    if 'capture_sources_state' in st_data:
+        sources=(st_data.get("capture_sources_state")).set_of_items
+        source_list = []
+        for source_id in sources:
+            source_item = (await rq.get_sources_by_filters(source_id=source_id)).source_name
+            source_list.append(source_item)
+        text = ', '.join(source_list)
+        if text:
+            message_text += f'Источник:\n<b>{text}</b>\n'
 
-    translation = st_data.get("translation")
-    translation_text = f'Перевод: {translation}\n' if translation else ''
+    if 'intervals_state' in st_data:
+        intervals=st_data.get("intervals_state")
+        intervals_list = [interval for interval in intervals]
+        text = ', '.join(intervals_list)
+        if text:
+            message_text += f'Интервал: \n<b>{text}</b>\n'
 
-    message_text = (word_text + author_text + level_text +
-                    part_text + definition_text + translation_text)
+    if 'capture_parts_state' in st_data:
+        dates=(st_data.get("capture_parts_state")).set_of_items
+        date_list = []
+        for date_values in dates:
+            date_list.append(date_values)
+        text = ', '.join(date_list)
+        if text:
+            message_text += f'Часть речи:\n<b>{text}</b>\n'
+
+    if 'input_definition_state' in st_data:
+        word = (st_data.get("input_definition_state")).input_text
+        text = word
+        if text:
+            message_text += f'Определение:\n<b>{text}</b>\n'
+
+    if 'input_translation_state' in st_data:
+        word = (st_data.get("input_translation_state")).input_text
+        text = word
+        if text:
+            message_text += f'Перевод:\n<b>{text}</b>\n'
+
+    if 'input_link_name_state' in st_data:
+        word = (st_data.get("input_link_name_state")).input_text
+        text = word
+        if text:
+            message_text += f'Имя ссылки:\n<b>{text}</b>\n'
+
+    if 'input_link_url_state' in st_data:
+        word = (st_data.get("input_link_url_state")).input_text
+        text = word
+        if text:
+            message_text += f'Ссылка:\n<b>{text}</b>\n'
+
+    if 'capture_priority_state' in st_data:
+        items = (st_data.get("capture_priority_state")).set_of_items
+        items_list = []
+        for item in items_list:
+            items_list.append(item)
+        text = ', '.join(items_list)
+        if text:
+            message_text += f'Приоритет:\n<b>{text}</b>\n'
+
+    if 'capture_words_state' in st_data:
+        words = (st_data.get("capture_words_state")).set_of_items
+        word_list = []
+        for word_id in words:
+            word = (await rq.get_words_by_filters(word_id_new=word_id)).word
+            word_list.append(word)
+        text = ', '.join(word_list)
+        if text:
+            message_text += f'Выбраны слова:\n<b>{text}</b>\n'
+
+    if 'capture_colls_state' in st_data:
+        colls = (st_data.get("capture_colls_state")).set_of_items
+        colls_list = []
+        for coll_id in colls:
+            coll = (await rq.get_medias_by_filters(media_id_new=coll_id)).collocation
+            colls_list.append(coll)
+        text = ', '.join(colls_list)
+        if text:
+            message_text += f'Выбраны коллокации:\n<b>{text}</b>\n'
+
+    if 'input_coll_state' in st_data:
+        word = (st_data.get("input_coll_state")).input_text
+        text = word
+        if text:
+            message_text += f'Коллокация:\n<b>{text}</b>\n'
+
+    if 'capture_levels_state' in st_data:
+        dates = (st_data.get("capture_levels_state")).set_of_items
+        date_list = []
+        for date_values in dates:
+            date_list.append(date_values)
+        text = ', '.join(date_list)
+        if text:
+            message_text += f'Уровень:\n<b>{text}</b>\n'
+
+    if 'capture_groups_state' in st_data:
+        groups = (st_data.get("capture_groups_state")).set_of_items
+        group_list = []
+        for group_id in groups:
+            group = (await rq.get_groups_by_filters(group_id=group_id)).name
+            group_list.append(group)
+        text = ', '.join(group_list)
+        if text:
+            message_text += f'Выбраны группы:\n<b>{text}</b>\n'
+
+    if 'capture_users_state' in st_data:
+        users=(st_data.get("capture_users_state")).set_of_items
+        user_list = []
+        for user_id in users:
+            user = (await rq.get_users_by_filters(user_id=user_id)).ident_name
+            user_list.append(user)
+        text = ', '.join(user_list)
+        if text:
+            message_text += f'Выбраны пользователи:\n<b>{text}</b>\n'
+
+    if 'capture_dates_state' in st_data:
+        dates=(st_data.get("capture_dates_state")).set_of_items
+        date_list = []
+        for date_values in dates:
+            date_list.append(date_values)
+        text = ', '.join(date_list)
+        if text:
+            message_text += f'Выбраны даты:\n<b>{text}</b>\n'
+
+    if 'capture_days_state' in st_data:
+        days = (st_data.get("capture_days_state")).set_of_items
+        day_list = []
+        for day_values in days:
+            day_list.append(str(day_values))
+        text = ', '.join(day_list)
+        if text:
+            message_text += f'Выбраны дни:\n<b>{text}</b>\n'
+
+    if 'input_media_state' in st_data:
+        media_type = (st_data.get("input_media_state")).media_type
+        media_id = (st_data.get("input_media_state")).media_id
+        media_caption = (st_data.get("input_media_state")).input_text
+        if media_type:
+            message_text += f'Тип медиа:\n<b>{media_type}</b>\n'
+        if media_id:
+            message_text += f'Номер медиа:\n<b>{media_id}</b>\n'
+        # if media_caption:
+        #     if 'input_caption_state' in st_data:
+        #         caption = (st_data.get("input_caption_state")).input_text
+        #         if not caption:
+        #             message_text += f'Текст медиа:\n<b>{media_caption}</b>\n'
+
+    if 'input_caption_state' in st_data:
+        caption = (st_data.get("input_caption_state")).input_text
+        if caption:
+            message_text += f'Текст медиа:\n<b>{caption}</b>\n'
+
+    if 'input_homework_state' in st_data:
+        word = (st_data.get("input_homework_state")).input_text
+        text = word
+        if text:
+            message_text += f'Домашнее задание:\n<b>{text}</b>\n'
 
     return message_text
 
 
-async def get_text_from_media_adding_state(state):
-    st_data = await state.get_data()
+def get_new_page_num(call : CallbackQuery | None = None,
+                     mess: Message | None = None,
+                     button_list: list[InlineKeyboardButton] | None = None,
+                     call_base: str = "",
+                     cols: int = 3,
+                     rows: int = 3) -> int:
 
-    word = st_data.get("word")
-    word_text = f'Выбрано слово: {word}\n' if word else ''
+    if mess:
+        page_num = 0
+    elif call:
+        if button_list:
+            call_item = call.data.replace(call_base,'')
+            # # считаем количество таблиц исходя из длины массива кнопок и количества строк и столбцов
+            count_of_tables = ((len(button_list) - 1) // (cols * rows)) + 1
+            # # меняем пагинацию в зависимости от нажатой кнопки
+            # # если нажата НЕКСТ - вытаскиваем из колла номер текущей страницы, добавляем 1, если последний - идем на первую
+            if call_item.startswith(CarouselButtons.NEXT.value):
+                page_num = int(call_item.replace(CarouselButtons.NEXT.value, ''))
+                page_num = 0 if page_num == count_of_tables - 1 else page_num + 1
+            # если нажата ПРЕД - вытаскиваем из колла номер текущей страницы, вычитаем 1, если первая - идем на последнюю
+            elif call_item.startswith(CarouselButtons.PREV.value):
+                page_num = int(call_item.replace(CarouselButtons.PREV.value, ''))
+                page_num = count_of_tables - 1 if page_num == 0 else page_num - 1
+            # если нажата последняя - идет туда
+            elif call_item.startswith(CarouselButtons.LAST.value):
+                page_num = count_of_tables - 1
+            # если нажата первая - идем туда
+            elif call_item.startswith(CarouselButtons.FIRST.value):
+                page_num = 0
+            # в других случаях - вычисляем
+            else:
+                page_num = 0
+                for i in range(len(button_list)):
+                    if call.data == button_list[i].callback_data:
+                        page_num = i // (rows * cols)
+        else:
+            page_num = 0
+    else:
+        page_num = 0
 
-    word_id = st_data.get("word_id")
-    word_id_text = f'ID выбранного слова: {word_id}\n' if word_id else ''
-
-    author = st_data.get("author")
-    author_text = f'ID aвторa: {author}\n' if author else ''
-
-    collocation = st_data.get("collocation")
-    collocation_text = f'Коллокация: {collocation}\n' if collocation else ''
-
-    level = st_data.get("level")
-    level_text = f'Уровень: {level}\n' if level else ''
-
-    media_type = st_data.get("media_type")
-    media_type_text = f'Тип медиа: {media_type}\n' if media_type else ''
-
-    caption = st_data.get("caption")
-    caption_text = f'Текст или подпись в видео(фото): {caption}\n' if caption else ''
-
-    tg_id = st_data.get("telegram_id")
-    tg_id_text = f'Номер в телеграм: {tg_id}\n' if tg_id else ''
-
-    study_day = st_data.get("study_day")
-    study_day_text = f'День изучения: {study_day}\n' if study_day else ''
-
-    message_text = (word_text + word_id_text + author_text +
-                    collocation_text + level_text + media_type_text +
-                    caption_text + tg_id_text + study_day_text)
-    return message_text
-
-
-async def get_text_from_test_adding_state(state):
-
-    st_data = await state.get_data()
-
-    word = st_data.get("word")
-    word_text = f'Выбрано слово: {word}\n' if word else ''
-
-    word_id = st_data.get("word_id")
-    word_id_text = f'ID выбранного слова: {word_id}\n' if word_id else ''
-
-    author = st_data.get("author")
-    author_text = f'ID aвторa: {author}\n' if author else ''
-
-    media_type = st_data.get("media_type")
-    media_type_text = f'Тип теста: {media_type}\n' if media_type else ''
-
-    collocation = st_data.get("collocation")
-    collocation_text = f'Задание теста: {collocation}\n' if collocation else ''
-
-    caption = st_data.get("caption")
-    caption_text = f'Текст или подпись в видео(фото): {caption}\n' if caption else ''
-
-    tg_id = st_data.get("telegram_id")
-    tg_id_text = f'Номер в телеграм: {tg_id}\n' if tg_id else ''
-
-    study_day = st_data.get("study_day")
-    study_day_text = f'День изучения: {study_day}\n' if study_day else ''
-
-    message_text = (word_text + word_id_text + author_text + media_type_text +
-                    collocation_text + caption_text + tg_id_text + study_day_text)
-
-    return message_text
-
-
-async def get_text_from_task_adding_state(state):
-
-    st_data = await state.get_data()
-
-    author = st_data.get("author")
-    author_text = f'ID aвторa: {author}\n' if author else ''
-
-    words = '\n'.join(map(str, st_data.get("words_kb"))) if st_data.get("words_kb") else None
-    words_text = f'Выбраны слова:\n {words} \n' if words else ''
-
-    medias = '\n'.join(map(str, st_data.get("medias_kb"))) if st_data.get("medias_kb") else None
-    medias_text = f'Выбраны коллокации:\n {medias} \n' if medias else ''
-
-    users = '\n'.join(map(str, st_data.get("users_kb"))) if st_data.get("users_kb") else None
-    users_text = f'Выбраны пользователи:\n {users}\n' if users else ''
-
-    beginning_date = st_data.get("beginning_date")
-    beginning_date_text = f'Дата начала: {beginning_date}\n' if beginning_date else ''
-
-    message_text = (author_text + words_text + medias_text + users_text + beginning_date_text)
-
-    return message_text
-
-async def get_text_from_homework_adding_state(state):
-
-    st_data = await state.get_data()
-
-    author = st_data.get("author")
-    author_text = f'ID aвторa: {author}\n' if author else ''
-
-    hometask = st_data.get("hometask")
-    hometask_text = f'Домашнее задание: {hometask}\n' if hometask else ''
-
-    users = '\n'.join(map(str, st_data.get("users_kb"))) if st_data.get("users_kb") else None
-    users_text = f'Выбраны пользователи:\n {users}\n' if users else ''
-
-    date = st_data.get("date")
-    date_text = f'Дата выполнения: {date}\n' if date else ''
-
-    message_text = (author_text + hometask_text + users_text + date_text)
-
-    return message_text
-
-
-async def get_words_list_for_kb_with_limit(words = None, limit: int = 21):
-    if not words:
-        words = await rq.get_words_by_filters(limit=limit)
-    word_list = []
-    for word in words:
-        word_list.append(word)
-    return word_list
-
-async def get_word_list_for_kb_with_ids(words = None, limit: int = 21):
-    if not words:
-        words = await rq.get_words_by_filters(limit=limit)
-    word_list = []
-    for word in words:
-        word_list.append(f'{word.id}-{word.word}')
-    return word_list
-
-
-async def get_medias_list_for_kb_with_limit(medias = None, limit: int = 20, offset: int = 0, media_only: bool = True):
-    if not medias:
-        medias = await rq.get_medias_by_filters(limit=limit, offset=offset, media_only=media_only)
-    media_list = []
-    for media in medias:
-        media_list.append(f'{media.id}-{media.collocation}')
-    return media_list
-
-
-async def get_users_list_for_kb_with_limit(users = None, limit: int = 21):
-    if not users:
-        users = await rq.get_users_by_filters(limit=limit)
-    user_list = []
-    for user in users:
-        user_list.append(f'{user.id}-{user.username}({user.first_name})')
-    return user_list
-
+    return page_num
 
 
 async def get_shema_text_by_word_id(word_id):
@@ -316,64 +297,68 @@ async def get_shema_text_by_word_id(word_id):
     return shema
 
 
+# 030425 функция добавления в множество нажатых с кнопок значений
+async def add_item_in_aim_set_plus_minus(aim_set: set, added_item: int | str) -> set:
+    # если число (как правило номер ид слова юзера и др)
+    if isinstance(added_item, int):
+        aim_set.symmetric_difference_update({added_item})
+        # aim_set.add(added_item)
+    if isinstance(added_item, str):
+        number_list = added_item.split(',')
+        if number_list[0].isdigit():
+            number_set = {int(num.strip()) for num in number_list if num.isdigit()}
+        else:
+            number_set = {num.strip() for num in number_list}
+        aim_set.symmetric_difference_update(number_set)
+        # aim_set = aim_set | number_set
+    return aim_set
 
 
-async def get_reminder_all_day_intervals() -> list:
-    reminder_24_intervals = []
-    for i in range(0,24):
-        start = i
-        end = i+1 if i!=23 else 0
-        reminder_24_intervals.append(f'{str(start).zfill(2)}:00-{str(end).zfill(2)}:00')
-    return reminder_24_intervals
+async def add_item_in_only_one_aim_set(aim_set: set, added_item: int | str) -> set:
+    # если число (как правило номер ид слова юзера и др)
+    if isinstance(added_item, int):
+        aim_set = {added_item}
+        print('внимание, ниже работает копи, участок памяти не меняется, здесь нет')
+        # aim_set.add(added_item)
+    if isinstance(added_item, str):
+        number_list = added_item.split(',')
+        if number_list[0].isdigit():
+            number_set = {int(num.strip()) for num in number_list if num.isdigit()}
+        else:
+            number_set = {num.strip() for num in number_list}
+        aim_set = number_set.copy()
+        # aim_set = aim_set | number_set
+    return aim_set
 
 
-async def get_interval_list_for_kb(reminder_intervals: str, check: str = '🟣') -> list:
-    all_intervals = await get_reminder_all_day_intervals()
-    if reminder_intervals:
-        interval_list = reminder_intervals.replace(' ', '').split(',')
-        for i in range(len(all_intervals)):
-            if all_intervals[i] in interval_list:
-                all_intervals[i] = check + all_intervals[i] + check
-    return all_intervals
+# 030425 функция добавления в множество нажатых с кнопок значений
+async def add_item_in_aim_set_plus_plus(aim_set: set, added_item: int | str) -> set:
+    # если число (как правило номер ид слова юзера и др)
+    if isinstance(added_item, int):
+        aim_set.add({added_item})
+    if isinstance(added_item, str):
+        number_list = added_item.split(',')
+        number_set = {int(num.strip()) for num in number_list if num.isdigit()}
+        aim_set = aim_set | number_set
+    return aim_set
 
 
-async def get_list_from_check_list(check_list: str, check: str = '🟣') -> list:
-    new_list = []
-    for i in range(len(check_list)):
-        if check_list[i][0] == check:
-            new_list.append(check_list[i][1:-1])
-    return new_list
-
-
-async def set_check_in_list(checked_list: list, checked_items: list = None, checked_item: str = None, check ='🟣'):
-    if checked_items:
-        for i in range(len(checked_list)):
-            for item in checked_items:
-                if item in checked_list[i]:
-                    if check not in checked_list[i]:
-                        checked_list[i] = check + checked_list[i] + check
-                    else:
-                        checked_list[i] = checked_list[i][1:-1]
-
-    if checked_item:
-        for i in range(len(checked_list)):
-            if checked_item in checked_list[i]:
-                if check not in checked_list[i]:
-                    checked_list[i] = check + checked_list[i] + check
-                else:
-                    checked_list[i] = checked_list[i][1:-1]
-
-    return checked_list
-
-async def check_now_time_in_reminder_intervals(reminder_intervals: str) -> bool:
-    rezult = False
-    now_time = datetime.now().time()
-    if reminder_intervals:
-        interval_list = reminder_intervals.replace(' ', '').split(',')
-        for interval in interval_list:
-            pattern = r'^([01]?[0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]$'
-            if re.match(pattern, interval):
-                start = datetime.strptime(interval.split('-')[0], "%H:%M").time()
-                end = datetime.strptime(interval.split('-')[1], "%H:%M").time()
-                rezult = rezult or (start < now_time < end)
-    return bool(rezult)
+# 030425 функция установки чеков в список кнопок
+def update_button_list_with_check(button_list: list[InlineKeyboardButton] | None,
+                                  aim_set : set | None,
+                                  call_base : str,
+                                  check: str = '🟣') -> list[InlineKeyboardButton]:
+    # проверяем передан ли нам баттон лист и множество
+    button_list_new = []
+    if button_list:
+        for button in button_list:
+            current_item = button.callback_data.replace(call_base,'')
+            if aim_set:
+                if isinstance((list(aim_set))[0], int):
+                    aim_set = [str(x) for x in aim_set]
+            if current_item in aim_set:
+                curr_button = InlineKeyboardButton(text=check + button.text + check, callback_data=button.callback_data)
+            else:
+                curr_button = InlineKeyboardButton(text=button.text, callback_data=button.callback_data)
+            button_list_new.append(curr_button)
+    return button_list_new

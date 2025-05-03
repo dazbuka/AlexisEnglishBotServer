@@ -33,13 +33,14 @@ class User(Base):
     username: Mapped[str]
     first_name: Mapped[str]
     last_name: Mapped[str | None]
-    intervals: Mapped[str | None] = mapped_column(server_default="10:00-11:00,14:00-15:00")
+    intervals: Mapped[str | None] = mapped_column(server_default="10:00")
     ident_name: Mapped[str] = mapped_column(unique=True)
     status: Mapped[UserStatus] = mapped_column(server_default=UserStatus.BLOCKED)
     last_message_id: Mapped[int | None]
 
     tasks: Mapped[list['Task']] = relationship("Task", back_populates="user", cascade="all, delete-orphan")
 
+    sources: Mapped[List['Source']] = relationship("Source", back_populates="author")
     words: Mapped[List['Word']] = relationship("Word", back_populates="author")
     medias: Mapped[List['Media']] = relationship("Media", back_populates="author")
     events: Mapped[List['Event']] = relationship("Event", back_populates="user")
@@ -53,7 +54,7 @@ class Group(Base):
 
     name: Mapped[str] = mapped_column(unique=True)
     users: Mapped[str]
-    level: Mapped[int]
+    level: Mapped[str]
 
     def __repr__(self):
         return f"<Group (group={self.name}, users={self.users}, level={self.level})>"
@@ -86,7 +87,7 @@ class Task(Base):
     media: Mapped["Media"] = relationship("Media", back_populates="tasks")
 
     def __repr__(self):
-        return f"<Task(id={self.id}, user_id={self.user_id}, media_id={self.media_id}, sent={self.sent})>"
+        return f"<Task(id={self.id}, user_id={self.user_id}, media_id={self.media_id}, time={self.time}, sent={self.sent})>"
 
 
 
@@ -104,7 +105,7 @@ class Media(Base):
 
     author: Mapped["User"] = relationship("User", back_populates="medias")
     word: Mapped["Word"] = relationship("Word", back_populates="medias")
-    tasks: Mapped[List["Task"]] = relationship("Task", back_populates="media")
+    tasks: Mapped[List["Task"]] = relationship("Task", back_populates="media", cascade="all, delete")
 
     def __repr__(self):
         return f"<Media(id={self.id}, word_id={self.word_id}, collocation={self.collocation})>"
@@ -120,12 +121,29 @@ class Word(Base):
     part: Mapped[str]
     author_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     level: Mapped[str | None]
+    source_id: Mapped[int] = mapped_column(ForeignKey('sources.id'))
 
     author: Mapped["User"] = relationship("User", back_populates="words")
+    source: Mapped["Source"] = relationship("Source", back_populates="words")
     medias: Mapped[List["Media"]] = relationship("Media", back_populates="word", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Word(id={self.id}, word={self.word})>"
+
+
+class Source(Base):
+    __tablename__ = 'sources'
+
+    author_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    source_type: Mapped[str | None]
+    source_name: Mapped[str] = mapped_column(unique=True)
+    source_description: Mapped[str | None]
+
+    author: Mapped["User"] = relationship("User", back_populates="sources")
+    words: Mapped[List["Word"]] = relationship("Word", back_populates="source")
+
+    def __repr__(self):
+        return f"<Source(id={self.id}, source={self.source_name})>"
 
 
 class Homework(Base):

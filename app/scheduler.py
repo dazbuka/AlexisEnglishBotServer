@@ -1,58 +1,48 @@
-import asyncio
+import asyncio, re
 from aiogram import Bot
 from datetime import datetime
 import  app.database.requests as rq
 from config import logger
-from config import (DEVELOPER_ID, REMINDER_INTERVAL, REMINDER_SLEEP_INTERVAL, SENDING_SLEEP_INTERVAL)
-from app.utils.admin_utils import count_user_tasks_by_tg_id, check_now_time_in_reminder_intervals
-import data.common_messages as cmsg
-import app.keyboards.user_keyboards as ukb
+from config import DEVELOPER_ID
+from app.database.models import Task, User
 from aiogram.exceptions import TelegramBadRequest
+from app.keyboards.keyboard_builder import keyboard_builder
+from app.keyboards.menu_buttons import *
 
-
-async def send_reminders(bot: Bot) -> int:
-    logger.info('бот работает, проверка связи раз в час')
-    user_list = await rq.get_users_by_filters()
-    text = 'Bot is working:\n'
-
-    sleeping_while_sending = 0
+async def send_reminders(bot: Bot):
+    user_list : list[User]= await rq.get_users_by_filters(status='ACTIVE')
+    now_time = datetime.now().time().strftime("%H:%M")
     # перебираем всех пользователей
     for user in user_list:
-        if user.status == 'ACTIVE':
-            # подсчитываем задания
-            tasks_counter = await count_user_tasks_by_tg_id(user_tg_id=user.telegram_id)
-            daily_count = tasks_counter['daily']
-            missed_count = tasks_counter['missed']
-            # дописываем текст сообщения админу
-            text = text + f'{user.username} has {daily_count} daily, {missed_count} missed\n'
-            if daily_count != 0:
-                if await check_now_time_in_reminder_intervals(user.intervals):
-                    last_msg = await rq.get_user_last_message_id(user.telegram_id)
-                    r_mess = await bot.send_message(user.telegram_id,
-                                                    cmsg.YOU_HAVE_TASKS.format(daily_count+missed_count),
-                                                    reply_markup=await ukb.common_main_kb(user_tg_id=user.telegram_id))
-                    try:
-                        await bot.delete_message(chat_id=user.telegram_id, message_id=last_msg)
-                        logger.info(f'sheduler удалил {last_msg}')
-                    except TelegramBadRequest as e:
-                        logger.error(f'ошибка удаления {last_msg} sheduler {e}')
-                    logger.info(f'отправил напоминание {user.username} ({user.first_name}, {user.telegram_id}), '
-                                f'что у него есть {daily_count+missed_count} заданий')
-                    await rq.update_user_last_message_id(user_tg_id=user.telegram_id, message_id=r_mess.message_id)
-                sleeping_while_sending += SENDING_SLEEP_INTERVAL
-                await asyncio.sleep(SENDING_SLEEP_INTERVAL)
-    # сообщение мне, временно
-    await bot.send_message(DEVELOPER_ID, text)
-    return sleeping_while_sending
+        interval_list = user.intervals.split(',')
+        if now_time in interval_list:
+            tasks : list[Task]= await rq.get_tasks_by_filters(user_id=user.id,
+                                                              sent=False,
+                                                              media_task_only=True,
+                                                              daily_and_missed=True)
+            if tasks:
+                reply_kb = await keyboard_builder(menu_pack=[[button_quick_menu, button_main_menu]])
+                if len(tasks) < 11:
+                    tasks_text = ', '.join({task.media.collocation for task in tasks})
+                    message_text = f'{MESS_YOU_HAVE_TASKS.format(len(tasks))}\n\nCollocations: {tasks_text}'
+                else:
+                    message_text = f'{MESS_YOU_HAVE_TASKS.format(len(tasks))}'
+                reminder_mess = await bot.send_message(chat_id=user.telegram_id,
+                                                       text=message_text,
+                                                       reply_markup=reply_kb)
+                try:
+                    await bot.delete_message(chat_id=user.telegram_id, message_id=user.last_message_id)
+                    logger.info(f'sheduler удалил {user.last_message_id}')
+                except TelegramBadRequest as e:
+                    logger.error(f'ошибка удаления {user.last_message_id} sheduler {e}')
+                await rq.update_user_last_message_id(user_tg_id=user.telegram_id, message_id=reminder_mess.message_id)
 
+    # сообщение мне, временно
+    if now_time[4:6] == '00':
+        reply_kb = await keyboard_builder(menu_pack=[[button_main_menu]])
+        await bot.send_message(DEVELOPER_ID, f'Time: {now_time} - {len(user_list)} users', reply_markup=reply_kb)
 
 async def check_reminders(bot: Bot):
     while True:
-        # берем из настроек начало и конец работы ремайндера, сравниваем с текущим временем и запускаем функцию
-        day_start = datetime.strptime(REMINDER_INTERVAL.split(' - ')[0], "%H:%M").time()
-        day_end = datetime.strptime(REMINDER_INTERVAL.split(' - ')[1], "%H:%M").time()
-        now = datetime.now().time()
-        sleeping_while_sending = 0
-        if day_start <= now <= day_end:
-            sleeping_while_sending = await send_reminders(bot)
-        await asyncio.sleep(REMINDER_SLEEP_INTERVAL - sleeping_while_sending)  # Запускаем раз в час
+        await send_reminders(bot)
+        await asyncio.sleep(60)  # Запускаем раз в час

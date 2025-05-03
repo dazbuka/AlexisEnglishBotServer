@@ -1,14 +1,14 @@
-from sqlalchemy.orm import selectinload, joinedload, lazyload, subqueryload
+from sqlalchemy.orm import selectinload
 from sqlalchemy import BigInteger
 from config import bot, DEVELOPER_ID
-from app.database.models import async_session, Homework
-from app.database.models import User, Task, Media, Word
+from app.database.models import async_session
+from app.database.models import User, Task, Media, Word, Source, Homework, Group, Link
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from config import logger
-from datetime import timedelta, datetime, time
+from datetime import timedelta, datetime, time, date
 from aiogram.types import Message
-
+from app.database.models import UserStatus
 
 # запросы по таблице users
 
@@ -56,6 +56,15 @@ async def update_user_intervals(user_tg_id: int, intervals : str):
         else:
             logger.info(f'Ошибка при изменении интервалов оповещения для пользователя {user_tg_id} ({intervals})')
 
+#изменение времени отправления сообщений
+async def update_user_intervals_2(user_id: int, intervals : str):
+    async with (async_session() as session):
+        user = await session.scalar(select(User).where(User.id == user_id))
+        if user:
+            user.intervals = intervals
+            await session.commit()
+        else:
+            logger.info(f'Ошибка при изменении интервалов оповещения для пользователя {user_id} ({intervals})')
 
 #изменение статуса пользователя
 async def update_user_status(user_tg_id: int, status : str):
@@ -94,7 +103,8 @@ async def get_user_last_message_id(user_tg_id: int) -> int:
 # поиск пользователя по фильтрам
 async def get_users_by_filters(user_id: int = None,
                                user_tg_id: int | BigInteger  = None,
-                               limit: int = 30):
+                               limit: int = 30,
+                               status: str = None):
     async with async_session() as session:
         try:
             selection = select(User).options(selectinload(User.tasks))
@@ -104,6 +114,9 @@ async def get_users_by_filters(user_id: int = None,
 
             if user_tg_id:
                 selection = selection.filter_by(telegram_id = user_tg_id)
+
+            if status:
+                selection = selection.filter_by(status = status)
 
             if limit:
                 selection = selection.order_by(User.id.desc()).limit(limit)
@@ -123,10 +136,40 @@ async def get_users_by_filters(user_id: int = None,
         except SQLAlchemyError as e:
             logger.error(f"Ошибка при поиске users: {e}")
 
-# запросы по таблице words
+
+
+ # добавление source в базу данных, ничего не возвращает
+async def add_source_to_db(source_name, author_id) -> bool:
+    async with async_session() as session:
+        try:
+            source_in_db = await session.scalar(select(Source).where(Source.source_name == source_name))
+            if not source_in_db:
+                session.add(Source(source_name=source_name,
+                                   author_id=author_id))
+                await session.commit()
+                logger.info(f"В базу данных добавлен source  {source_name}!")
+            else:
+                logger.info(f"Такой source уже существует!")
+            return True
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при добавлении source: {e}")
+            return False
+
+async def update_source_changing(source_id, source_name, author_id) -> bool:
+    async with async_session() as session:
+        source: Source = await session.scalar(select(Source).where(Source.id == source_id))
+        if source:
+            source.source_name = source_name
+            source.author_id = author_id
+            await session.commit()
+            return True
+        else:
+            logger.warning(f'Ошибка при изменении источника')
+            return False
+
 
 # добавление слова в базу данных, ничего не возвращает
-async def add_word_to_db(word, translation, definition, part, author_id, level) -> bool:
+async def add_word_to_db(word, translation, definition, part, author_id, level, source_id) -> bool:
     async with async_session() as session:
         try:
             word_in_db = await session.scalar(select(Word).where(Word.word == word))
@@ -136,6 +179,7 @@ async def add_word_to_db(word, translation, definition, part, author_id, level) 
                                  definition=definition,
                                  part=part,
                                  author_id=author_id,
+                                 source_id=source_id,
                                  level=level))
                 await session.commit()
                 logger.info(f"В базу данных добавлено слово {word}!")
@@ -146,12 +190,62 @@ async def add_word_to_db(word, translation, definition, part, author_id, level) 
             logger.error(f"Ошибка при добавлении слова: {e}")
             return False
 
+
+async def update_word_changing(word_id, word, translation, definition, part, author_id, level, source_id) -> bool:
+    async with async_session() as session:
+        word_in_db : Word = await session.scalar(select(Word).where(Word.id == word_id))
+        if word_in_db:
+            word_in_db.word = word
+            word_in_db.translation = translation
+            word_in_db.definition = definition
+            word_in_db.part = part
+            word_in_db.level = level
+            word_in_db.author_id = author_id
+            word_in_db.source_id = source_id
+            await session.commit()
+            return True
+        else:
+            logger.warning(f'Ошибка при изменении слова')
+            return False
+
+
+# поиск пользователя по фильтрам
+async def get_sources_by_filters(source_id: int = None,
+                                 source_id_set: set = None,
+                                 source_name: str = None):
+    async with async_session() as session:
+        try:
+            selection = select(Source).options(selectinload(Source.words))
+
+            if source_name:
+                selection = selection.filter_by(source_name = source_name)
+
+            if source_id_set:
+                selection = selection.filter(Source.id.in_(source_id_set)).order_by(Source.created_at.asc())
+
+            rezult = await session.execute(selection)
+            sources = rezult.scalars().all()
+
+            if source_id:
+                selection = selection.filter(Source.id == source_id)
+                rezult = await session.execute(selection)
+                sources = rezult.scalars().one_or_none()
+
+            if not sources:
+                logger.info(f"не нашел sources в базе данных")
+            return sources
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при поиске sources: {e}")
+
+
 # поиск пользователя по фильтрам
 async def get_words_by_filters(word_id: int = None,
+                               word_id_set: set = None,
                                word: str = None,
-                               part: str = None,
                                limit: int = None,
-                               piece_of_word: str = None):
+                               piece_of_word: str = None,
+                               word_id_new: int = None,
+                               source_id: int = None):
     async with async_session() as session:
         try:
             selection = select(Word).options(selectinload(Word.medias))
@@ -159,20 +253,28 @@ async def get_words_by_filters(word_id: int = None,
             if word_id:
                 selection = selection.filter(Word.id == word_id)
 
+            if word_id_set:
+                selection = selection.filter(Word.id.in_(word_id_set)).order_by(Word.created_at.asc())
+
+            if source_id:
+                selection = selection.filter(Word.source_id == source_id)
+
             if word:
                 selection = selection.filter_by(word = word)
 
             if piece_of_word:
                 selection = selection.filter(Word.word.contains(piece_of_word))
 
-            if part:
-                selection = selection.filter_by(part = part)
-
             if limit:
                 selection = selection.order_by(Word.id.desc()).limit(limit)
 
             rezult = await session.execute(selection)
             words = rezult.scalars().all()
+
+            if word_id_new:
+                selection = selection.filter(Word.id == word_id_new)
+                rezult = await session.execute(selection)
+                words = rezult.scalars().one_or_none()
 
             if not words:
                 logger.info(f"не нашел words в базе данных")
@@ -186,6 +288,8 @@ async def get_words_by_filters(word_id: int = None,
 # запросы по таблице medias
 # запрос на медиа с фильтрами
 async def get_medias_by_filters(media_id: int = None,
+                                media_id_new: int = None,
+                                media_id_set: set = None,
                                 word_id: int = None,
                                 media_type: str = None,
                                 word: str = None,
@@ -202,6 +306,9 @@ async def get_medias_by_filters(media_id: int = None,
 
             if media_id:
                 selection = selection.filter(Media.id==media_id)
+
+            if media_id_set:
+                selection = selection.filter(Media.id.in_(media_id_set)).order_by(Media.created_at.asc())
 
             if word_id:
                 selection = selection.filter_by(word_id=word_id)
@@ -239,6 +346,11 @@ async def get_medias_by_filters(media_id: int = None,
             rez = await session.execute(selection)
             medias = rez.scalars().all()
 
+            if media_id_new:
+                selection = selection.filter(Media.id == media_id_new)
+                rezult = await session.execute(selection)
+                medias = rezult.scalars().one_or_none()
+
             if medias:
                 return medias
             else:
@@ -268,6 +380,26 @@ async def add_media_to_db(media_type, word_id, collocation, caption, study_day,
             return False
 
 
+async def update_media_changing(media_id, media_type, word_id, collocation, caption, study_day,
+                                author_id, telegram_id = None, level = None) -> bool:
+    async with async_session() as session:
+        media : Media = await session.scalar(select(Media).where(Media.id == media_id))
+        if media:
+            media.media_type = media_type
+            media.word_id = word_id
+            media.collocation = collocation
+            media.caption = caption
+            media.study_day = study_day
+            media.author_id = author_id
+            media.telegram_id = telegram_id
+            media.level = level
+            await session.commit()
+            return True
+        else:
+            logger.info(f'Ошибка при изменении медиа')
+            return False
+
+
 # запросы по таблице tasks
 
 # добавление task
@@ -293,16 +425,12 @@ async def update_task_status(task_id):
 
 # запрос на задания с фильтрами
 async def get_tasks_by_filters(task_id: int = None,
+                               task_id_new: int = None,
                                user_id: int = None,
                                user_tg_id : int | BigInteger = None,
                                sent: bool = None,
-                               daily_tasks_only: bool = False,
-                               missed_tasks_only: bool = False,
-                               future_tasks_only: bool = False,
-                               num_limit: int = 0,
-                               media_task_only: bool = False,
-                               limit: int = None,
-                               offset: int = None):
+                               daily_and_missed: bool = False,
+                               media_task_only: bool = False):
     async with async_session() as session:
         try:
             selection = select(Task)
@@ -311,50 +439,79 @@ async def get_tasks_by_filters(task_id: int = None,
                 selection = selection.filter(Task.id==task_id)
 
             if user_id:
+                selection = selection.join(User.tasks)
                 selection = selection.filter(Task.user_id==user_id)
 
             if user_tg_id:
-                # selection =select(User,Task).join(Task,User.tasks_as_user)
                 selection = selection.join(User.tasks)
                 selection = selection.filter(User.telegram_id == user_tg_id)
 
             if sent is not None:
                 selection = selection.filter(Task.sent == sent)
 
-            if daily_tasks_only:
-                beg_of_day = datetime.combine(datetime.now().date(), time())
-                end_of_day = beg_of_day + timedelta(days=1)
-                selection = selection.filter(Task.time>beg_of_day, Task.time<end_of_day)
-
-            if missed_tasks_only:
-                beg_of_day = datetime.combine(datetime.now().date(), time())
-                selection = selection.filter(Task.time < beg_of_day)
-
-            if future_tasks_only:
+            if daily_and_missed:
                 end_of_day = datetime.combine(datetime.now().date(), time()) + timedelta(days=1)
-                selection = selection.filter(Task.time>end_of_day)
-
-            if limit:
-                if offset:
-                    selection = selection.order_by(Task.id.desc()).limit(limit).offset(offset)
-                else:
-                    selection = selection.order_by(Task.id.desc()).limit(limit)
-
-            if num_limit:
-                if num_limit != 0:
-                    selection = selection.limit(num_limit)
+                selection = selection.filter(Task.time<end_of_day)
 
             if media_task_only:
                 selection = selection.join(Media)
                 selection = selection.filter(Media.media_type.startswith('test') == False)
 
-            # if test_only:
-            #     selection = selection.filter(Media.media_type.startswith('test'))
-            #
-            # if media_only:
-            #     selection = selection.filter(Media.media_type.startswith('test') == False)
-
             selection = selection.options(selectinload(Task.user), selectinload(Task.media))
+            rez = await session.execute(selection)
+            tasks = rez.scalars().all()
+
+            if task_id_new:
+                selection = selection.filter(Task.id == task_id_new)
+                selection = selection.options(selectinload(Task.user), selectinload(Task.media))
+                rezult = await session.execute(selection)
+                tasks = rezult.scalars().one_or_none()
+
+            if tasks:
+                return tasks
+            else:
+                logger.info(f"не нашел tasks в базе данных")
+
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при поиске заданий: {e}")
+
+
+async def get_tasks(user_id: int = None,
+                    user_tg_id : int | BigInteger = None,
+                    sent: bool = None,
+                    media_task_only: bool = None,
+                    for_quick_tasks_menu: bool = None):
+    async with async_session() as session:
+        try:
+            selection = select(Task)
+
+            if user_id:
+                selection = selection.filter(Task.user_id==user_id)
+
+            if user_tg_id:
+                # selection =select(User,Task).join(Task,User.tasks_as_user)
+                selection = selection.join(User.tasks)
+                selection = selection.filter(User.telegram_id == user_tg_id).order_by(Task.time.desc())
+
+            if sent is not None:
+                selection = selection.filter(Task.sent == sent)
+
+            if media_task_only:
+                selection = selection.join(Media)
+                selection = selection.filter(Media.media_type.startswith('test') == False)
+
+            if for_quick_tasks_menu:
+                selection = selection.filter(Task.sent == False)
+                today_start = datetime.combine(date.today(), datetime.min.time())  # Начало текущего дня
+                tomorrow_start = today_start + timedelta(days=1)
+                selection = selection.filter(Task.time < tomorrow_start)
+                selection = selection.join(Media)
+                selection = selection.filter(Media.media_type.startswith('test') == False)
+
+
+
+            selection = selection.options(selectinload(Task.user),
+                                          selectinload(Task.media).selectinload(Media.word).selectinload(Word.source))
             rez = await session.execute(selection)
             tasks = rez.scalars().all()
             if tasks:
@@ -378,9 +535,24 @@ async def set_homework(hometask, users, homework_date, author_id) -> bool:
             logger.error(f"Ошибка при добавлении домашнего задания в базу данных: {e}")
             return False
 
+async def update_homework_editing(homework_id, hometask, users, homework_date, author_id) -> bool:
+    async with (async_session() as session):
+        homework : Homework = await session.scalar(select(Homework).where(Homework.id == homework_id))
+        if homework:
+            homework.hometask = hometask
+            homework.users = users
+            homework.time = homework_date
+            homework.author_id = author_id
+            await session.commit()
+            return True
+        else:
+            logger.info(f'Ошибка при изменении домашнего задания')
+            return False
+
 
 # запрос на задания с фильтрами
 async def get_homeworks_by_filters(homework_id: int = None,
+                                   homework_id_new: int = None,
                                    actual : bool = True):
     async with async_session() as session:
         try:
@@ -395,6 +567,12 @@ async def get_homeworks_by_filters(homework_id: int = None,
             rez = await session.execute(selection)
             homeworks = rez.scalars().all()
 
+            if homework_id_new:
+                selection = selection.filter(Homework.id == homework_id_new)
+                # selection = selection.options(selectinload(Task.user), selectinload(Task.media))
+                rezult = await session.execute(selection)
+                homeworks = rezult.scalars().one_or_none()
+
             if homeworks:
                 return homeworks
             else:
@@ -402,3 +580,113 @@ async def get_homeworks_by_filters(homework_id: int = None,
 
         except SQLAlchemyError as e:
             logger.error(f"Ошибка при поиске homeworks: {e}")
+
+# добавление url
+async def set_link(link_name, link_url, users, priority) -> bool:
+    async with async_session() as session:
+        try:
+            session.add(Link(name=link_name, link=link_url, users=users, priority=priority))
+            await session.commit()
+            logger.info(f"В базу данных добавлена ссылка {link_url}!")
+            return True
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при добавлении ссылки в базу данных: {e}")
+            return False
+
+async def update_link_changing(link_id, link_name, link_url, users, priority) -> bool:
+    async with async_session() as session:
+        link : Link = await session.scalar(select(Link).where(Link.id == link_id))
+        if link:
+            link.name = link_name
+            link.link = link_url
+            link.users = users
+            link.priority = priority
+            await session.commit()
+            return True
+        else:
+            logger.info(f'Ошибка при изменении ссылки')
+            return False
+
+
+# запрос на задания с фильтрами
+async def get_links_by_filters(link_id :int = None, user_id: int = None):
+    async with async_session() as session:
+        try:
+            selection = select(Link)
+
+            if user_id:
+                selection = selection.filter(Link.users.contains(user_id)).order_by(Link.priority.asc())
+
+            rez = await session.execute(selection)
+            links = rez.scalars().all()
+
+            if link_id:
+                selection = selection.filter(Link.id == link_id)
+                rez = await session.execute(selection)
+                links = rez.scalars().one_or_none()
+
+            if links:
+                return links
+            else:
+                logger.info(f"не нашел links в базе данных")
+
+            return links
+
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при поиске заданий: {e}")
+
+
+
+
+# добавление group
+async def set_group(name: str, users: str, level: str) -> bool:
+    async with async_session() as session:
+        try:
+            session.add(Group(name=name, users=users, level=level))
+            await session.commit()
+            logger.info(f"В базу данных добавлена группа {users} - {name}!")
+            return True
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при добавлении группы в базу данных: {e}")
+            return False
+
+
+async def update_group_editing(group_id: int, name: str, users: str, level: str) -> bool:
+    async with async_session() as session:
+        group: Group = await session.scalar(select(Group).where(Group.id == group_id))
+        if group:
+            group.name = name
+            group.users = users
+            group.level = level
+            await session.commit()
+            return True
+        else:
+            logger.warning(f"не найдена группа для изменения")
+            return False
+
+
+# поиск пользователя по фильтрам
+async def get_groups_by_filters(name: str = None,
+                                group_id: int  = None,
+                                limit: int = 30):
+    async with async_session() as session:
+        try:
+            selection = select(Group)
+
+            if name:
+                selection = selection.filter_by(name = name)
+
+            if limit:
+                selection = selection.order_by(Group.id.desc()).limit(limit)
+
+            rezult = await session.execute(selection)
+            groups = rezult.scalars().all()
+
+            if group_id:
+                selection = selection.filter_by(id = group_id)
+                rezult = await session.execute(selection)
+                groups = rezult.scalars().one_or_none()
+
+            return groups
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при поиске groups: {e}")
