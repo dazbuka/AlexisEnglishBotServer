@@ -2,7 +2,27 @@ from typing import Optional
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from app.keyboards.menu_buttons import button_confirm
-from app.handlers.common_settings import *
+from app.common_settings import *
+
+# 030425 функция установки чеков в список кнопок
+def update_button_list_with_check(button_list: list[InlineKeyboardButton] | None,
+                                  aim_set : set | None,
+                                  call_base : str,
+                                  check: str = '🟣') -> list[InlineKeyboardButton]:
+    # проверяем передан ли нам баттон лист и множество
+    button_list_new = []
+    if button_list:
+        for button in button_list:
+            current_item = button.callback_data.replace(call_base,'')
+            if aim_set:
+                if isinstance((list(aim_set))[0], int):
+                    aim_set = [str(x) for x in aim_set]
+            if current_item in aim_set:
+                curr_button = InlineKeyboardButton(text=check + button.text + check, callback_data=button.callback_data)
+            else:
+                curr_button = InlineKeyboardButton(text=button.text, callback_data=button.callback_data)
+            button_list_new.append(curr_button)
+    return button_list_new
 
 def update_button_with_call_base(button : InlineKeyboardButton, call_base : str) -> InlineKeyboardButton:
     button_with_call_base = InlineKeyboardButton(text=button.text,

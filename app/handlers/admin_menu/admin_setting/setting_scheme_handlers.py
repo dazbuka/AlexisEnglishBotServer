@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
 
 from app.keyboards.menu_buttons import *
-from app.handlers.common_settings import *
+from app.common_settings import *
 
 from app.database.requests import get_users_by_filters, get_groups_by_filters
 from app.utils.admin_utils import message_answer, add_item_in_aim_set_plus_plus

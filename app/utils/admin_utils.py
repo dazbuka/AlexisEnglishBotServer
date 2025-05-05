@@ -1,8 +1,8 @@
 from aiogram.types import InlineKeyboardButton
 import app.database.requests as rq
 from config import logger
-from aiogram.types import Message, CallbackQuery, ContentType
-from app.handlers.common_settings import *
+from aiogram.types import Message, CallbackQuery
+from app.common_settings import *
 
 
 def logger_decorator(func):
@@ -101,11 +101,11 @@ async def state_text_builder(state):
             message_text += f'Интервал: \n<b>{text}</b>\n'
 
     if 'capture_parts_state' in st_data:
-        dates=(st_data.get("capture_parts_state")).set_of_items
-        date_list = []
-        for date_values in dates:
-            date_list.append(date_values)
-        text = ', '.join(date_list)
+        levels=(st_data.get("capture_parts_state")).set_of_items
+        level_list = []
+        for date_values in levels:
+            level_list.append(date_values)
+        text = ', '.join(level_list)
         if text:
             message_text += f'Часть речи:\n<b>{text}</b>\n'
 
@@ -169,11 +169,11 @@ async def state_text_builder(state):
             message_text += f'Коллокация:\n<b>{text}</b>\n'
 
     if 'capture_levels_state' in st_data:
-        dates = (st_data.get("capture_levels_state")).set_of_items
-        date_list = []
-        for date_values in dates:
-            date_list.append(date_values)
-        text = ', '.join(date_list)
+        levels = (st_data.get("capture_levels_state")).set_of_items
+        level_list = []
+        for date_values in levels:
+            level_list.append(date_values)
+        text = ', '.join(level_list)
         if text:
             message_text += f'Уровень:\n<b>{text}</b>\n'
 
@@ -198,11 +198,11 @@ async def state_text_builder(state):
             message_text += f'Выбраны пользователи:\n<b>{text}</b>\n'
 
     if 'capture_dates_state' in st_data:
-        dates=(st_data.get("capture_dates_state")).set_of_items
-        date_list = []
-        for date_values in dates:
-            date_list.append(date_values)
-        text = ', '.join(date_list)
+        levels=(st_data.get("capture_dates_state")).set_of_items
+        level_list = []
+        for date_values in levels:
+            level_list.append(date_values)
+        text = ', '.join(level_list)
         if text:
             message_text += f'Выбраны даты:\n<b>{text}</b>\n'
 
@@ -341,24 +341,3 @@ async def add_item_in_aim_set_plus_plus(aim_set: set, added_item: int | str) -> 
         number_set = {int(num.strip()) for num in number_list if num.isdigit()}
         aim_set = aim_set | number_set
     return aim_set
-
-
-# 030425 функция установки чеков в список кнопок
-def update_button_list_with_check(button_list: list[InlineKeyboardButton] | None,
-                                  aim_set : set | None,
-                                  call_base : str,
-                                  check: str = '🟣') -> list[InlineKeyboardButton]:
-    # проверяем передан ли нам баттон лист и множество
-    button_list_new = []
-    if button_list:
-        for button in button_list:
-            current_item = button.callback_data.replace(call_base,'')
-            if aim_set:
-                if isinstance((list(aim_set))[0], int):
-                    aim_set = [str(x) for x in aim_set]
-            if current_item in aim_set:
-                curr_button = InlineKeyboardButton(text=check + button.text + check, callback_data=button.callback_data)
-            else:
-                curr_button = InlineKeyboardButton(text=button.text, callback_data=button.callback_data)
-            button_list_new.append(curr_button)
-    return button_list_new

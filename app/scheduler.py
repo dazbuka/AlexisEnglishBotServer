@@ -45,4 +45,4 @@ async def send_reminders(bot: Bot):
 async def check_reminders(bot: Bot):
     while True:
         await send_reminders(bot)
-        await asyncio.sleep(60)  # Запускаем раз в час
+        await asyncio.sleep(60)  # Запускаем проверку раз в минуту

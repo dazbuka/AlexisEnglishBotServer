@@ -1,18 +1,21 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
-
-import app.utils.admin_utils
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
 from app.keyboards.menu_buttons import *
-from app.handlers.common_settings import *
+from app.common_settings import *
 from app.database.requests import get_links_by_filters, get_users_by_filters
 from app.utils.admin_utils import get_new_page_num
 from app.keyboards.keyboard_builder import keyboard_builder
 
 links_router = Router()
 
+class LinksState(StatesGroup):
+    links_state = State()
+
 # переход в меню добавления задания по схеме
 @links_router.callback_query(F.data.startswith(CALL_LINKS_MENU))
-async def show_links(call: CallbackQuery):
+async def show_links(call: CallbackQuery, state: FSMContext):
     user_id = (await get_users_by_filters(user_tg_id=call.from_user.id)).id
     buttons_page = 0
     link_kb_buttons = []

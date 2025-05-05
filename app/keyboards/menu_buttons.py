@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardButton
-from app.handlers.common_settings import *
+from app.common_settings import *
 
 button_next_task = InlineKeyboardButton(text=BTEXT_NEXT_TASK, callback_data=CALL_NEXT_TASK)
 button_repeat_today = InlineKeyboardButton(text=BTEXT_REPEAT, callback_data=CALL_REPEAT)

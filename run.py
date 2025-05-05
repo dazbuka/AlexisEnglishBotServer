@@ -12,7 +12,7 @@ from app.middlewares import BlockingUserMiddleware, DeletingAndLoggingMessagesMi
 
 # Функция, которая настроит командное меню (дефолтное для всех пользователей)
 async def set_commands():
-    commands = [BotCommand(command='start', description='Старт')]
+    commands = [BotCommand(command='start', description='Start')]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
 # Функция, которая выполнится, когда бот запустится
@@ -45,14 +45,13 @@ async def main():
     dp.update.middleware(BlockingUserMiddleware())
     dp.callback_query.middleware(DeletingAndLoggingMessagesMiddleware())
     dp.message.middleware(DeletingAndLoggingMessagesMiddleware())
-
-
     dp.include_routers(menu_router,
                        common_router)
-    # подключаем проверку напоминалок в промежутках времени
 
+    # подключаем проверку напоминалок в промежутках времени
     asyncio.create_task(check_reminders(bot))
     # фукнции, выполняющиеся при запуске и остановке бота
+
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)
     # поехали

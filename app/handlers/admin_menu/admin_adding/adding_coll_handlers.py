@@ -1,12 +1,12 @@
 import os
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, ContentType
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
-from app.database.models import Media, Source, Task, Word, Group
+from app.database.models import Media
 from app.keyboards.menu_buttons import *
-from app.handlers.common_settings import *
+from app.common_settings import *
 
 from app.database.requests import get_users_by_filters, add_media_to_db, get_medias_by_filters, update_media_changing
 from app.utils.admin_utils import (state_text_builder, mess_answer,

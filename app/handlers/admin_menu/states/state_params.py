@@ -1,14 +1,13 @@
 from typing import Optional
 from aiogram.types import InlineKeyboardButton
 from aiogram.fsm.state import State
-from alembic.script.revision import is_revision
 
-from app.handlers.common_settings import *
+from app.common_settings import *
 from app.database.requests import get_users_by_filters, get_words_by_filters, get_sources_by_filters, \
     get_groups_by_filters, get_medias_by_filters, get_homeworks_by_filters, get_links_by_filters
 from config import logger
 from app.database.models import UserStatus
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 
 
 class InputStateParams:

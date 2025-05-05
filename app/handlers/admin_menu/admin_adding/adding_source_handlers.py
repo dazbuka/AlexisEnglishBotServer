@@ -2,9 +2,9 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from app.database.models import Media, Source, Task, Word, Group
+from app.database.models import Source
 from app.keyboards.menu_buttons import *
-from app.handlers.common_settings import *
+from app.common_settings import *
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
 from app.utils.admin_utils import message_answer, state_text_builder
 from app.database.requests import (get_users_by_filters,  add_source_to_db, get_sources_by_filters,

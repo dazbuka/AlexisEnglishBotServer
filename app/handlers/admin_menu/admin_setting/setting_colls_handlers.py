@@ -2,10 +2,10 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from app.keyboards.menu_buttons import *
-from app.handlers.common_settings import *
+from app.common_settings import *
 
 from app.database.requests import get_users_by_filters, get_groups_by_filters
 from app.utils.admin_utils import (message_answer,

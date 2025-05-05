@@ -4,11 +4,11 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from app.keyboards.menu_buttons import *
-from app.handlers.common_settings import *
+from app.common_settings import *
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
 from app.utils.admin_utils import message_answer, state_text_builder
 from app.database.requests import get_users_by_filters, add_word_to_db, get_words_by_filters, update_word_changing
-from app.database.models import Media, Source, Task, Word, Group
+from app.database.models import Word
 from app.handlers.admin_menu.states.state_executor import FSMExecutor
 from app.handlers.admin_menu.states.state_params import InputStateParams
 adding_word_router = Router()
@@ -234,13 +234,15 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
         capture_sources_state.set_of_items = {word.source_id}
         await state.update_data(capture_sources_state=capture_sources_state)
 
-        capture_levels_state: InputStateParams = await state.get_value('capture_levels_state')
-        capture_levels_state.set_of_items = {word.level}
-        await state.update_data(capture_levels_state=capture_levels_state)
+        if word.level:
+            capture_levels_state: InputStateParams = await state.get_value('capture_levels_state')
+            capture_levels_state.set_of_items = {word.level}
+            await state.update_data(capture_levels_state=capture_levels_state)
 
-        capture_parts_state: InputStateParams = await state.get_value('capture_parts_state')
-        capture_parts_state.set_of_items = {word.part}
-        await state.update_data(capture_parts_state=capture_parts_state)
+        if word.part:
+            capture_parts_state: InputStateParams = await state.get_value('capture_parts_state')
+            capture_parts_state.set_of_items = {word.part}
+            await state.update_data(capture_parts_state=capture_parts_state)
 
         input_definition_state: InputStateParams = await state.get_value('input_definition_state')
         input_definition_state.input_text = word.definition

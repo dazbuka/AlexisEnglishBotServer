@@ -21,7 +21,7 @@ from app.handlers.admin_menu.admin_adding.adding_group_handlers import adding_gr
 from app.handlers.admin_menu.admin_adding.adding_homework_handlers import adding_homework_router
 from app.handlers.admin_menu.admin_adding.adding_links_handlers import adding_link_router
 from app.handlers.common_menu.links_handlers import links_router
-from app.handlers.common_menu.tasks_handlers import quick_tasks_router
+from app.handlers.common_menu.tasks_handlers import tasks_router
 from app.handlers.common_menu.revision_handlers import revision_router
 from app.handlers.common_menu.homework_handlers import homework_router
 from app.handlers.common_menu.config_handlers import config_router
@@ -36,7 +36,7 @@ menu_router.include_router(adding_link_router)
 menu_router.include_router(setting_scheme_router)
 menu_router.include_router(setting_colls_router)
 menu_router.include_router(links_router)
-menu_router.include_router(quick_tasks_router)
+menu_router.include_router(tasks_router)
 menu_router.include_router(revision_router)
 menu_router.include_router(homework_router)
 menu_router.include_router(config_router)
@@ -47,7 +47,18 @@ class MenuState(StatesGroup):
 
 @menu_router.message(CommandStart())
 async def command_start(message: Message, state: FSMContext):
-
+    print('1. разнести настройки и токен в два разных файла')
+    print('2. шедулер ревижн')
+    print('3. мидлварь ревижн')
+    print('4. объединение функций добавления элемента в множество, сейчас их 3')
+    print('5. ревижн моделс и реквестс полный, разобраться в склалчеми')
+    print('6. обработать ввод сообщения в процессе выполнения заданий')
+    print('7. ревижн блокировка пользователя')
+    print('8. ревижн блокировка пользователя')
+    print('9. ревижн блокировка пользователя')
+    print('10. ревижн блокировка пользователя')
+    print('11. ревижн блокировка пользователя')
+    print('сделать енум или множество карусельки, в который еще можно и функцию засунуть по листанию')
     print('сделать енум или множество карусельки, в который еще можно и функцию засунуть по листанию')
     print('поработай с функцией добавления элементов в принимающее множество, нужно объединить все 3')
     print('сейчас выводит все задания из бд, нужно только сегодняшние и пропущенные')

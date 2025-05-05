@@ -3,11 +3,11 @@ import re
 from aiogram.fsm.context import FSMContext
 from typing import List
 from aiogram.fsm.state import State, StatesGroup
-from app.database.models import Media, Source, Task, Word
+from app.database.models import Media, Task
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 from app.keyboards.menu_buttons import *
-from app.handlers.common_settings import *
+from app.common_settings import *
 from app.database.requests import get_tasks, get_medias_by_filters
 from app.utils.admin_utils import mess_answer, message_answer
 from app.keyboards.keyboard_builder import keyboard_builder
@@ -30,10 +30,9 @@ class RevisionState(StatesGroup):
 @revision_router.callback_query(F.data == CALL_REVISION_COLLS)
 async def revision_start(call: CallbackQuery, state: FSMContext):
     tasks: List['Task'] = await get_tasks(user_tg_id=call.from_user.id, sent=True, media_task_only=True)
-
-    user_colls = {task.media_id for task in tasks}
-    user_words = {task.media.word_id for task in tasks}
-    user_sources = {task.media.word.source_id for task in tasks}
+    user_colls = {task.media_id for task in tasks if task.media_id}
+    user_words = {task.media.word_id for task in tasks if task.media.word_id}
+    user_sources = {task.media.word.source_id for task in tasks if task.media.word.source_id}
 
     revision_sources_state = InputStateParams(self_state=RevisionState.revision_sources_state,
                                               next_state=RevisionState.revision_words_state,
@@ -88,23 +87,16 @@ async def revision_sources_words_loop(call: CallbackQuery, state: FSMContext):
         revision_words_state: InputStateParams = await state.get_value('revision_words_state')
         call_item = call.data.replace(CALL_REVISION_SOURCES, '')
         if re.match(r'^\d+$', call_item):
-            print("Строка содержит целое число source state.")
             await revision_words_state.update_state_for_words_revision(source_id=int(call_item))
             await state.update_data(revision_words_state=revision_words_state)
-        else:
-            print('10min')
 
 
     if fsm_state_str == RevisionState.revision_words_state:
         revision_colls_state: InputStateParams = await state.get_value('revision_colls_state')
         call_item = call.data.replace(CALL_REVISION_WORDS, '')
         if re.match(r'^\d+$', call_item):
-            print("Строка содержит целое число words_state")
-            print(call_item)
             await revision_colls_state.update_state_for_colls_revision(word_id=int(call_item))
             await state.update_data(revision_colls_state=revision_colls_state)
-        else:
-            print('20min')
 
 
     current_fsm = FSMExecutor()

@@ -6,7 +6,7 @@ from app.database.models import User
 from app.keyboards.menu_buttons import *
 from app.utils.admin_utils import state_text_builder
 from app.database.requests import get_users_by_filters, update_user_intervals
-from app.handlers.common_settings import *
+from app.common_settings import *
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_check
 
 config_router = Router()

@@ -10,7 +10,7 @@ from typing import Callable, Dict, Any, Awaitable
 from aiogram.exceptions import TelegramBadRequest
 from app.database.models import UserStatus
 import app.database.requests as rq
-from app.handlers.common_settings import *
+from app.common_settings import *
 
 
 class DeletingAndLoggingMessagesMiddleware(BaseMiddleware):
