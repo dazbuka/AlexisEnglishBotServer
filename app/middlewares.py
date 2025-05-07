@@ -27,7 +27,7 @@ class DeletingAndLoggingMessagesMiddleware(BaseMiddleware):
         # вытаскиваем номер сообщения в зависимости от типа объекта
         # если это нажатие на кнопку (колбэк)
         if isinstance(event, CallbackQuery):
-            print(f'----------------------------------{event.data}--------------------------------------')
+            # print(f'----------------------------------{event.data}--------------------------------------')
             message_id = event.message.message_id
             # записываем номер сообщения в базу данных
             await rq.update_user_last_message_id(user_tg_id=user_id, message_id=message_id)
@@ -37,12 +37,12 @@ class DeletingAndLoggingMessagesMiddleware(BaseMiddleware):
             else:
                 text = "None"
             # лог
-            logger.info(f'MW: {user.telegram_id} ({user.ident_name}) call "{event.data}" '
-                        f'from "{text}" ({message_id})')
+            # logger.info(f'MW: {user.telegram_id} ({user.ident_name}) call "{event.data}" '
+            #             f'from "{text}" ({message_id})')
         # если пользователь отправил сообщение
         elif isinstance(event, Message):
-            print(f'----------------------------------{event.text}--------------------------------------')
-            print(f'----------------------------------{event.caption}--------------------------------------')
+            # print(f'----------------------------------{event.text}--------------------------------------')
+            # print(f'----------------------------------{event.caption}--------------------------------------')
             message_id = event.message_id
             # записываем номер сообщения в базу данных
             await rq.update_user_last_message_id(user_tg_id=user_id, message_id=message_id)
@@ -52,7 +52,7 @@ class DeletingAndLoggingMessagesMiddleware(BaseMiddleware):
             else:
                 text = "None"
             # лог
-            logger.info(f'MW: {user.telegram_id} ({user.ident_name}) send "{text}" ({message_id})')
+            # logger.info(f'MW: {user.telegram_id} ({user.ident_name}) send "{text}" ({message_id})')
             # .replace('\n','')
             # в этом случае удаляем то, что отправил пользователь
             try:

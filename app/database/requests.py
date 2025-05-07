@@ -1,4 +1,5 @@
 from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.expression import func
 from sqlalchemy import BigInteger
 from config import bot, DEVELOPER_ID
 from app.database.models import async_session
@@ -9,6 +10,8 @@ from config import logger
 from datetime import timedelta, datetime, time, date
 from aiogram.types import Message
 from app.database.models import UserStatus
+from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 # запросы по таблице users
 
@@ -57,7 +60,7 @@ async def update_user_intervals(user_tg_id: int, intervals : str):
             logger.info(f'Ошибка при изменении интервалов оповещения для пользователя {user_tg_id} ({intervals})')
 
 #изменение времени отправления сообщений
-async def update_user_intervals_2(user_id: int, intervals : str):
+async def update_user_intervals_temp_alembic(user_id: int, intervals : str):
     async with (async_session() as session):
         user = await session.scalar(select(User).where(User.id == user_id))
         if user:
@@ -92,13 +95,13 @@ async def update_user_last_message_id(user_tg_id: int | BigInteger, message_id: 
 async def get_user_last_message_id(user_tg_id: int) -> int:
     async with (async_session() as session):
         user = await session.scalar(select(User).where(User.telegram_id == user_tg_id))
+        last_msg = 0
         if user:
             if user.last_message_id:
-                last_msg = user.last_message_id
-                return last_msg
+                last_msg = int(user.last_message_id)
         else:
             logger.info(f"Ошибка! Не могу определить номер последнего сообщения для {user_tg_id}")
-
+        return last_msg
 
 # поиск пользователя по фильтрам
 async def get_users_by_filters(user_id: int = None,
@@ -221,7 +224,7 @@ async def get_sources_by_filters(source_id: int = None,
                 selection = selection.filter_by(source_name = source_name)
 
             if source_id_set:
-                selection = selection.filter(Source.id.in_(source_id_set)).order_by(Source.created_at.asc())
+                selection = selection.filter(Source.id.in_(source_id_set)).order_by(Source.created_at.desc())
 
             rezult = await session.execute(selection)
             sources = rezult.scalars().all()
@@ -378,6 +381,30 @@ async def add_media_to_db(media_type, word_id, collocation, caption, study_day,
         except SQLAlchemyError as e:
             logger.error(f"Ошибка при добавлении медиа: {e}")
             return False
+
+
+# удаление media
+async def delete_media_from_db(media_id : int):
+    async with async_session() as session:
+        try:
+            # Сначала находим объект Media по его идентификатору
+            media_stmt = select(Media).where(Media.id == media_id)
+            result = await session.execute(media_stmt)
+            media = result.scalar_one_or_none()
+
+            if media is None:
+                raise NoResultFound(f"Медиа с ID {media_id} не найдено.")
+
+            # Удаляем найденный объект
+            await session.delete(media)
+            await session.commit()
+            logger.info(f"Успешно удалили медиа с ID {media_id}.")
+
+        except NoResultFound as e:
+            logger.warning(e)
+        except SQLAlchemyError as e:
+            logger.error(f"Произошла ошибка при удалении медиа: {e}")
+
 
 
 async def update_media_changing(media_id, media_type, word_id, collocation, caption, study_day,
@@ -615,7 +642,8 @@ async def get_links_by_filters(link_id :int = None, user_id: int = None):
             selection = select(Link)
 
             if user_id:
-                selection = selection.filter(Link.users.contains(user_id)).order_by(Link.priority.asc())
+                selection = selection.filter(Link.users.contains(user_id)).order_by(Link.priority.asc(), Link.created_at.desc())
+                # selection = selection.filter(func.find_in_set(str(user_id), Link.users) > 0).order_by(Link.priority.asc(), Link.created_at.desc())
 
             rez = await session.execute(selection)
             links = rez.scalars().all()

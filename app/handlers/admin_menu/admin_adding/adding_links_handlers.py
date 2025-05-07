@@ -7,11 +7,11 @@ from app.keyboards.menu_buttons import *
 from app.common_settings import *
 
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
-from app.utils.admin_utils import (message_answer, state_text_builder, add_item_in_aim_set_plus_plus)
+from app.admin_utils import (message_answer, state_text_builder, add_item_in_aim_set_plus_plus)
 from app.database.requests import (get_users_by_filters, get_groups_by_filters, set_link, get_links_by_filters,
                                    update_link_changing)
-from app.handlers.admin_menu.states.state_executor import FSMExecutor
-from app.handlers.admin_menu.states.state_params import InputStateParams
+from app.handlers.states.loop_state_executor import FSMExecutor
+from app.handlers.states.loop_state_params import InputStateParams
 adding_link_router = Router()
 
 class AddLink(StatesGroup):
@@ -24,7 +24,7 @@ class AddLink(StatesGroup):
     confirmation_state = State()
 
 menu_add_link = [
-    [button_adding_menu_back, button_editing_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 menu_add_link_with_changing = [
@@ -32,7 +32,7 @@ menu_add_link_with_changing = [
      update_button_with_call_base(button_change_link_url, CALL_ADD_LINK)],
     [update_button_with_call_base(button_change_users, CALL_ADD_LINK),
      update_button_with_call_base(button_change_priority, CALL_ADD_LINK)],
-    [button_adding_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 # переход в меню добавления задания по схеме
@@ -178,21 +178,25 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
         link_id = int(list(capture_link_changing.set_of_items)[0])
         link : Link = await get_links_by_filters(link_id=link_id)
 
-        input_link_name_state: InputStateParams = await state.get_value('input_link_name_state')
-        input_link_name_state.input_text = link.name
-        await state.update_data(input_link_name_state=input_link_name_state)
+        if link.name:
+            input_link_name_state: InputStateParams = await state.get_value('input_link_name_state')
+            input_link_name_state.input_text = link.name
+            await state.update_data(input_link_name_state=input_link_name_state)
 
-        input_link_url_state: InputStateParams = await state.get_value('input_link_url_state')
-        input_link_url_state.input_text = link.link
-        await state.update_data(input_link_url_state=input_link_url_state)
+        if link.link:
+            input_link_url_state: InputStateParams = await state.get_value('input_link_url_state')
+            input_link_url_state.input_text = str(link.link)
+            await state.update_data(input_link_url_state=input_link_url_state)
 
-        users_state: InputStateParams = await state.get_value('capture_users_state')
-        users_state.set_of_items = {int(x) for x in link.users.split(',')}
-        await state.update_data(capture_users_state=users_state)
+        if link.users:
+            users_state: InputStateParams = await state.get_value('capture_users_state')
+            users_state.set_of_items = {int(x) for x in link.users.split(',')}
+            await state.update_data(capture_users_state=users_state)
 
-        capture_priority_state: InputStateParams = await state.get_value('capture_priority_state')
-        capture_priority_state.set_of_items = {link.priority}
-        await state.update_data(capture_priority_state=capture_priority_state)
+        if link.priority:
+            capture_priority_state: InputStateParams = await state.get_value('capture_priority_state')
+            capture_priority_state.set_of_items = {link.priority}
+            await state.update_data(capture_priority_state=capture_priority_state)
 
         confirmation_state: InputStateParams = await state.get_value('confirmation_state')
         confirmation_state.call_base = CALL_EDIT_LINK

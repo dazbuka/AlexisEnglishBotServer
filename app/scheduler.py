@@ -32,9 +32,8 @@ async def send_reminders(bot: Bot):
                                                        reply_markup=reply_kb)
                 try:
                     await bot.delete_message(chat_id=user.telegram_id, message_id=user.last_message_id)
-                    logger.info(f'sheduler удалил {user.last_message_id}')
                 except TelegramBadRequest as e:
-                    logger.error(f'ошибка удаления {user.last_message_id} sheduler {e}')
+                    logger.warning(f'ошибка удаления {user.last_message_id} sheduler {e}')
                 await rq.update_user_last_message_id(user_tg_id=user.telegram_id, message_id=reminder_mess.message_id)
 
     # сообщение мне, временно

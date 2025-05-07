@@ -9,12 +9,12 @@ from app.keyboards.menu_buttons import *
 from app.common_settings import *
 
 from app.database.requests import get_users_by_filters, add_media_to_db, get_medias_by_filters, update_media_changing
-from app.utils.admin_utils import (state_text_builder, mess_answer,
-                                   get_shema_text_by_word_id)
+from app.admin_utils import (state_text_builder, mess_answer,
+                             get_shema_text_by_word_id)
 from config import bot, media_dir
 
-from app.handlers.admin_menu.states.state_executor import FSMExecutor
-from app.handlers.admin_menu.states.state_params import (InputStateParams)
+from app.handlers.states.loop_state_executor import FSMExecutor
+from app.handlers.states.loop_state_params import (InputStateParams)
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
 
 adding_coll_router = Router()
@@ -32,7 +32,7 @@ class AddColl(StatesGroup):
 
 
 menu_add_coll = [
-    [button_adding_menu_back, button_editing_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 menu_add_coll_with_changing = [
@@ -42,7 +42,7 @@ menu_add_coll_with_changing = [
     [update_button_with_call_base(button_change_media, CALL_ADD_COLL),
      update_button_with_call_base(button_change_caption, CALL_ADD_COLL),
      update_button_with_call_base(button_change_days, CALL_ADD_COLL)],
-    [button_setting_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 # переход в меню добавления задания по схеме
@@ -210,31 +210,37 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
 
         await state.update_data(author_id=coll.author_id)
 
-        capture_words_state: InputStateParams = await state.get_value('capture_words_state')
-        capture_words_state.set_of_items = {coll.word_id}
-        await state.update_data(capture_words_state=capture_words_state)
+        if coll.word_id:
+            capture_words_state: InputStateParams = await state.get_value('capture_words_state')
+            capture_words_state.set_of_items = {coll.word_id}
+            await state.update_data(capture_words_state=capture_words_state)
 
-        input_coll_state: InputStateParams = await state.get_value('input_coll_state')
-        input_coll_state.input_text = coll.collocation
-        await state.update_data(input_coll_state=input_coll_state)
+        if coll.collocation:
+            input_coll_state: InputStateParams = await state.get_value('input_coll_state')
+            input_coll_state.input_text = coll.collocation
+            await state.update_data(input_coll_state=input_coll_state)
 
-        input_media_state: InputStateParams = await state.get_value('input_media_state')
-        input_media_state.media_id = coll.telegram_id
-        input_media_state.media_type = coll.media_type
-        input_media_state.input_text = coll.caption
-        await state.update_data(input_media_state=input_media_state)
+        if coll.media_type and coll.telegram_id and coll.caption:
+            input_media_state: InputStateParams = await state.get_value('input_media_state')
+            input_media_state.media_id = coll.telegram_id
+            input_media_state.media_type = coll.media_type
+            input_media_state.input_text = coll.caption
+            await state.update_data(input_media_state=input_media_state)
 
-        input_caption_state: InputStateParams = await state.get_value('input_caption_state')
-        input_caption_state.input_text = coll.caption
-        await state.update_data(input_caption_state=input_caption_state)
+        if coll.caption:
+            input_caption_state: InputStateParams = await state.get_value('input_caption_state')
+            input_caption_state.input_text = coll.caption
+            await state.update_data(input_caption_state=input_caption_state)
 
-        levels_state: InputStateParams = await state.get_value('capture_levels_state')
-        levels_state.set_of_items = {coll.level}
-        await state.update_data(capture_levels_state=levels_state)
+        if coll.level:
+            levels_state: InputStateParams = await state.get_value('capture_levels_state')
+            levels_state.set_of_items = {coll.level}
+            await state.update_data(capture_levels_state=levels_state)
 
-        capture_days_state: InputStateParams = await state.get_value('capture_days_state')
-        capture_days_state.set_of_items = {coll.study_day}
-        await state.update_data(capture_days_state=capture_days_state)
+        if coll.study_day:
+            capture_days_state: InputStateParams = await state.get_value('capture_days_state')
+            capture_days_state.set_of_items = {coll.study_day}
+            await state.update_data(capture_days_state=capture_days_state)
 
         confirmation_state: InputStateParams = await state.get_value('confirmation_state')
         confirmation_state.call_base = CALL_EDIT_COLL

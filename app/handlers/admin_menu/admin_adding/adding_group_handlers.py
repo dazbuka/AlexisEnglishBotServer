@@ -7,10 +7,10 @@ from app.keyboards.menu_buttons import *
 from app.common_settings import *
 
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
-from app.utils.admin_utils import message_answer, state_text_builder
+from app.admin_utils import message_answer, state_text_builder
 from app.database.requests import set_group, get_groups_by_filters, update_group_editing
-from app.handlers.admin_menu.states.state_executor import FSMExecutor
-from app.handlers.admin_menu.states.state_params import (InputStateParams)
+from app.handlers.states.loop_state_executor import FSMExecutor
+from app.handlers.states.loop_state_params import (InputStateParams)
 adding_group_router = Router()
 
 class AddGroup(StatesGroup):
@@ -21,14 +21,14 @@ class AddGroup(StatesGroup):
     confirmation_state = State()
 
 menu_add_group = [
-    [button_adding_menu_back, button_editing_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 menu_add_group_with_changing = [
     [update_button_with_call_base(button_change_group, CALL_ADD_GROUP),
      update_button_with_call_base(button_change_users, CALL_ADD_GROUP),
      update_button_with_call_base(button_change_levels, CALL_ADD_GROUP)],
-    [button_adding_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 # переход в меню добавления задания по схеме
@@ -154,17 +154,20 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
         group_id = int(list(capture_group_state.set_of_items)[0])
         group : Group = await get_groups_by_filters(group_id=group_id)
 
-        input_group_state: InputStateParams = await state.get_value('input_group_state')
-        input_group_state.input_text = group.name
-        await state.update_data(input_group_state=input_group_state)
+        if group.name:
+            input_group_state: InputStateParams = await state.get_value('input_group_state')
+            input_group_state.input_text = group.name
+            await state.update_data(input_group_state=input_group_state)
 
-        users_state: InputStateParams = await state.get_value('capture_users_state')
-        users_state.set_of_items = {int(x) for x in group.users.split(',')}
-        await state.update_data(capture_users_state=users_state)
+        if group.users:
+            users_state: InputStateParams = await state.get_value('capture_users_state')
+            users_state.set_of_items = {int(x) for x in group.users.split(',')}
+            await state.update_data(capture_users_state=users_state)
 
-        levels_state: InputStateParams = await state.get_value('capture_levels_state')
-        levels_state.set_of_items = {group.level}
-        await state.update_data(capture_levels_state=levels_state)
+        if group.level:
+            levels_state: InputStateParams = await state.get_value('capture_levels_state')
+            levels_state.set_of_items = {group.level}
+            await state.update_data(capture_levels_state=levels_state)
 
         confirmation_state: InputStateParams = await state.get_value('confirmation_state')
         confirmation_state.call_base = CALL_EDIT_GROUP
@@ -195,7 +198,6 @@ async def admin_adding_task_capture_confirmation_from_call(call: CallbackQuery, 
         confirmation_state: InputStateParams = await state.get_value('confirmation_state')
 
         if confirm == CALL_CHANGING_GROUP:
-            print('11')
             # при нажатии на изменение задаем следующий стейт элементов
             confirmation_state.next_state = AddGroup.input_group_state
             # делаем так, чтобы в стейте добавления последний стейт (на изменения который) стал следующим
@@ -245,8 +247,6 @@ async def admin_adding_task_capture_confirmation_from_call(call: CallbackQuery, 
         res = True
 
         users_for_db = ','.join(map(str, list(users_set)))
-
-        print('не закончено редактирование группы')
 
         for level in levels_set:
             if call.data.startswith(CALL_ADD_GROUP):

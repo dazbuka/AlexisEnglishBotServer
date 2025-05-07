@@ -7,8 +7,8 @@ from aiogram.fsm.context import FSMContext
 from config import ADMIN_IDS
 from app.database.models import Task
 from app.database.requests import set_user, get_tasks
-from app.handlers.admin_menu.states.menu_states import MenuStateParams
-from app.utils.admin_utils import message_answer
+from app.handlers.states.menu_state_params import MenuStateParams
+from app.admin_utils import message_answer
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_tasks_num
 from app.keyboards.menu_buttons import *
 # routers
@@ -47,6 +47,7 @@ class MenuState(StatesGroup):
 
 @menu_router.message(CommandStart())
 async def command_start(message: Message, state: FSMContext):
+    print('0. добавь картинку в главное меню?')
     print('1. разнести настройки и токен в два разных файла')
     print('2. шедулер ревижн')
     print('3. мидлварь ревижн')
@@ -54,18 +55,12 @@ async def command_start(message: Message, state: FSMContext):
     print('5. ревижн моделс и реквестс полный, разобраться в склалчеми')
     print('6. обработать ввод сообщения в процессе выполнения заданий')
     print('7. ревижн блокировка пользователя')
-    print('8. ревижн блокировка пользователя')
-    print('9. ревижн блокировка пользователя')
-    print('10. ревижн блокировка пользователя')
-    print('11. ревижн блокировка пользователя')
-    print('сделать енум или множество карусельки, в который еще можно и функцию засунуть по листанию')
-    print('сделать енум или множество карусельки, в который еще можно и функцию засунуть по листанию')
-    print('поработай с функцией добавления элементов в принимающее множество, нужно объединить все 3')
-    print('сейчас выводит все задания из бд, нужно только сегодняшние и пропущенные')
-    print('список юзеров в таблице группы может быть пустым, поменять алембиком')
-    print('поменять алембиком время направления сообщений, наверно сначала добавить')
-    print('напиши хелп')
-    print('разработай полностью новую систему тестов')
+    print('8. сделать связь многие ко многим в линкс и юзерс')
+    print('9. напиши хелп')
+    print('10. разработай полностью новую систему тестов')
+    print('10. разработай полностью новую систему тестов')
+    print('11. список юзеров в таблице группы может быть пустым, поменять алембиком')
+    print('12. revision logger')
     # чистим стейт
     await state.clear()
     # проверяем пользователя и регистрируем при необходимости
@@ -98,6 +93,7 @@ async def command_start(message: Message, state: FSMContext):
 @menu_router.callback_query(F.data == CALL_ADMIN_MENU)
 @menu_router.callback_query(F.data == CALL_ADDING_MENU)
 @menu_router.callback_query(F.data == CALL_EDITING_MENU)
+@menu_router.callback_query(F.data == CALL_DELETING_MENU)
 @menu_router.callback_query(F.data == CALL_SETTING_MENU)
 @menu_router.callback_query(F.data == CALL_REVISION_MENU)
 @menu_router.callback_query(F.data == CALL_CONFIG_MENU)
@@ -111,6 +107,7 @@ async def admin_menu_setting_button(call: CallbackQuery, state: FSMContext):
                                                    [button_adding_menu],
                                                    [button_editing_menu],
                                                    [button_setting_menu],
+                                                   [button_deleting_menu],
                                                    [button_update_user_intervals],
                                                    [button_delete_test_media],
                                                    [button_main_menu_back]
@@ -126,7 +123,7 @@ async def admin_menu_setting_button(call: CallbackQuery, state: FSMContext):
                                                           [button_add_link],
                                                           [button_add_group],
                                                           [button_add_homework],
-                                                          [button_admin_menu, button_main_menu_back]],
+                                                          [button_admin_menu_back, button_main_menu_back]],
                                                curr_main_mess=MESS_ADDING_MENU)
 
     elif call.data == CALL_EDITING_MENU and call.from_user.id in ADMIN_IDS:
@@ -139,7 +136,16 @@ async def admin_menu_setting_button(call: CallbackQuery, state: FSMContext):
                                                    [button_edit_link],
                                                    [button_edit_group],
                                                    [button_edit_homework],
-                                                   [button_admin_menu, button_main_menu_back]
+                                                   [button_admin_menu_back, button_main_menu_back]
+                                               ],
+                                               curr_main_mess=MESS_EDITING_MENU)
+
+    elif call.data == CALL_DELETING_MENU and call.from_user.id in ADMIN_IDS:
+        current_state_params = MenuStateParams(curr_call=CALL_DELETING_MENU,
+                                               curr_menu=
+                                               [
+                                                   [button_delete_task],
+                                                   [button_admin_menu_back, button_main_menu_back]
                                                ],
                                                curr_main_mess=MESS_EDITING_MENU)
 
@@ -147,7 +153,7 @@ async def admin_menu_setting_button(call: CallbackQuery, state: FSMContext):
         current_state_params = MenuStateParams(curr_call=CALL_SETTING_MENU,
                                                curr_menu=[[button_set_scheme],
                                                           [button_set_coll],
-                                                          [button_admin_menu, button_main_menu_back]],
+                                                          [button_admin_menu_back, button_main_menu_back]],
                                                curr_main_mess=MESS_SETTING_MENU)
 
     elif call.data == CALL_REVISION_MENU:

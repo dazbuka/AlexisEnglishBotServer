@@ -4,7 +4,7 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from app.database.models import User
 from app.keyboards.menu_buttons import *
-from app.utils.admin_utils import state_text_builder
+from app.admin_utils import state_text_builder
 from app.database.requests import get_users_by_filters, update_user_intervals
 from app.common_settings import *
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_check
@@ -23,7 +23,6 @@ async def config_sending_time_start(call: CallbackQuery, state: FSMContext):
     await state.clear()
     user : User = await get_users_by_filters(user_tg_id=call.from_user.id)
     set_of_intervals = {x[:5] for x in user.intervals.split(',')}
-    print(set_of_intervals)
 
     await state.update_data(intervals_state=set_of_intervals)
 

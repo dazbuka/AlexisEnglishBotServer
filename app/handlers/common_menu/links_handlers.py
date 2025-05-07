@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from app.keyboards.menu_buttons import *
 from app.common_settings import *
 from app.database.requests import get_links_by_filters, get_users_by_filters
-from app.utils.admin_utils import get_new_page_num
+from app.admin_utils import get_new_page_num
 from app.keyboards.keyboard_builder import keyboard_builder
 
 links_router = Router()
@@ -16,6 +16,7 @@ class LinksState(StatesGroup):
 # переход в меню добавления задания по схеме
 @links_router.callback_query(F.data.startswith(CALL_LINKS_MENU))
 async def show_links(call: CallbackQuery, state: FSMContext):
+    await state.clear()
     user_id = (await get_users_by_filters(user_tg_id=call.from_user.id)).id
     buttons_page = 0
     link_kb_buttons = []

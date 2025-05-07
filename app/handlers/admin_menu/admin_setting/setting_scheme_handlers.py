@@ -8,11 +8,11 @@ from app.keyboards.menu_buttons import *
 from app.common_settings import *
 
 from app.database.requests import get_users_by_filters, get_groups_by_filters
-from app.utils.admin_utils import message_answer, add_item_in_aim_set_plus_plus
-from app.utils.admin_utils import state_text_builder
+from app.admin_utils import message_answer, add_item_in_aim_set_plus_plus
+from app.admin_utils import state_text_builder
 from app.database.requests import get_medias_by_filters, set_task
-from app.handlers.admin_menu.states.state_executor import FSMExecutor
-from app.handlers.admin_menu.states.state_params import InputStateParams
+from app.handlers.states.loop_state_executor import FSMExecutor
+from app.handlers.states.loop_state_params import InputStateParams
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
 
 setting_scheme_router = Router()
@@ -26,14 +26,14 @@ class SetScheme(StatesGroup):
     confirmation_state = State() # стейт обрабатывающий конечное подтверждение ввода
 
 menu_set_scheme = [
-    [button_setting_menu_back, button_admin_menu, button_main_menu_back]
+    [button_setting_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 menu_set_scheme_with_changing = [
     [update_button_with_call_base(button_change_words, CALL_SET_SCHEME),
      update_button_with_call_base(button_change_users, CALL_SET_SCHEME),
      update_button_with_call_base(button_change_dates, CALL_SET_SCHEME)],
-    [button_setting_menu_back, button_admin_menu, button_main_menu_back]
+    [button_setting_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 # переход в меню добавления задания по схеме

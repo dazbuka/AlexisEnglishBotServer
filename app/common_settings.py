@@ -53,7 +53,7 @@ USER_MSG_REQUEST_WHEN_BLOCKED="Send request to admin."
 USER_MSG_REQUEST_SENDED="Request sended."
 
 MESS_YOU_HAVE_TASKS= "🗓️A friendly reminder! You have <b>{}</b> task(s) to complete!"
-MESS_HELP = 'Hello, this is help!🤗'
+MESS_HELP = 'Hello, this is help!🤗 ... '
 MESS_DONT_UNDERSTAND= "Can't understand you, press any button:"
 
 CALL_MAIN_MENU= '@m_main_menu️'
@@ -71,7 +71,7 @@ BTEXT_REVISION_MENU= '🔎Revision'
 BTEXT_REVISION_MENU_BACK = "🔎Revision"
 
 CALL_LINKS_MENU= '@m_links_menu️'
-MESS_LINKS_MENU = "Welcome to links menu!"
+MESS_LINKS_MENU = "Choose link!"
 MESS_LINKS_MENU_EMPTY = "You have no links!"
 BTEXT_LINKS_MENU= '🌏Links'
 BTEXT_LINKS_MENU_BACK = "Exit to links menu"
@@ -100,8 +100,8 @@ CHECK_CONFIG_SENDING_TIME = '🟣'
 
 CALL_ADMIN_MENU= '@m_admin_menu️'
 MESS_ADMIN_MENU = "Welcome to main admin menu!"
-BTEXT_ADMIN_MENU= '🛠️---Admin menu NEW---🛠️'
-BTEXT_ADMIN_MENU_BACK = "🛠️Admin menu"
+BTEXT_ADMIN_MENU= '🔐Admin menu NEW'
+BTEXT_ADMIN_MENU_BACK = "⬆️Admin menu"
 
 CALL_REVISION_SOURCES= '@m_revision_sources_menu️'
 MESS_REVISION_SOURCES = 'Choose source or print part of source name to find'
@@ -125,6 +125,7 @@ CALL_REVISION_COLLS= '@m_revision_colls_menu️'
 BTEXT_REVISION_COLLS_MENU= '📜Revision collocations'
 MESS_REVISION_COLLS_MENU = 'Choose collocation or print part of collocation to find'
 BTEXT_REVISION_COLLS_MENU_BACK = "📜Collocations"
+
 # show links
 CALL_SHOW_TASKS = "show_links_"
 MESS_SHOW_TASKS = 'Выберите коллокацию'
@@ -135,64 +136,73 @@ CHECK_REVISION_TASKS= '🟣'
 
 CALL_ADDING_MENU = "@c_adm_menu_add"
 MESS_ADDING_MENU = "Choose what do you want to add"
-BTEXT_ADDING_MENU = "Add words, collocations and other"
-BTEXT_ADDING_MENU_BACK = "🛠️Adding"
+BTEXT_ADDING_MENU = "➕Add words, collocations and other"
+BTEXT_ADDING_MENU_BACK = "⬆️Adding"
 
 CALL_EDITING_MENU = "c_adm_menu_edit"
 MESS_EDITING_MENU = "Choose what do you want to edit"
-BTEXT_EDITING_MENU = "Editing"
-BTEXT_EDITING_MENU_BACK = "🛠️Editing"
+BTEXT_EDITING_MENU = "🪚Editing"
+BTEXT_EDITING_MENU_BACK = "⬆️Editing"
+
+CALL_DELETING_MENU = "c_adm_menu_delete"
+MESS_DELETING_MENU = "Choose what do you want to delete"
+BTEXT_DELETING_MENU = "🚽Deleting"
+BTEXT_DELETING_MENU_BACK = "⬆️Deleting"
+
+CALL_DELETE_TASK= 'c_delete_task_'
+BTEXT_DELETE_TASK = "🪣Delete task"
+
 
 CALL_UPDATE_USER_INTERVALS = "@c_update_user_intervals"
-BTEXT_UPDATE_USER_INTERVALS = "*Temp*Update user intervals"
+BTEXT_UPDATE_USER_INTERVALS = "*Temp*🧹Update user intervals"
 
 CALL_DELETE_TEST_MEDIA = "@c_delete_test_media"
-BTEXT_DELETE_TEST_MEDIA = "*Temp*Delete test media"
+BTEXT_DELETE_TEST_MEDIA = "*Temp*🪣Delete test media"
 
 CALL_SETTING_MENU = "@c_adm_menu_set"
 MESS_SETTING_MENU = "Choose what do you want to set or assign"
-BTEXT_SETTING_MENU = "📌Set task to user"
-BTEXT_SETTING_MENU_BACK = "🛠️Set menu-"
+BTEXT_SETTING_MENU = "📌Assign task to user"
+BTEXT_SETTING_MENU_BACK = "⬆️Assign"
 
 CALL_ADD_SOURCE= 'c_add_source_'
-BTEXT_ADD_SOURCE = "Add source"
+BTEXT_ADD_SOURCE = "🖌Add source"
 CALL_EDIT_SOURCE= 'c_edit_source_'
-BTEXT_EDIT_SOURCE = "Edit source"
+BTEXT_EDIT_SOURCE = "🔧Edit source"
 
 CALL_ADD_WORD= 'c_add_word_'
-BTEXT_ADD_WORD = "Add word"
+BTEXT_ADD_WORD = "🖌Add word"
 CALL_EDIT_WORD= 'c_edit_word_'
-BTEXT_EDIT_WORD = "Edit word"
+BTEXT_EDIT_WORD = "🔧Edit word"
 
 CALL_ADD_COLL= 'c_add_coll_'
-BTEXT_ADD_COLL = "Add collocation"
+BTEXT_ADD_COLL = "🖌Add collocation"
 CALL_EDIT_COLL= 'c_edit_coll_'
-BTEXT_EDIT_COLL = "Edit collocation"
+BTEXT_EDIT_COLL = "🔧Edit collocation"
 
 CALL_ADD_TEST = "c_add_test_"
 BTEXT_ADD_TEST = "Add test"
 
 CALL_ADD_LINK = "c_add_link_"
-BTEXT_ADD_LINK = "Add link"
+BTEXT_ADD_LINK = "🖌Add link"
 CALL_EDIT_LINK = "c_edit_link_"
-BTEXT_EDIT_LINK = "Edit link"
+BTEXT_EDIT_LINK = "🔧Edit link"
 
 CALL_ADD_GROUP = "c_add_group_"
-BTEXT_ADD_GROUP = "Add group"
+BTEXT_ADD_GROUP = "🖌Add group"
 CALL_EDIT_GROUP = "c_edit_group_"
-BTEXT_EDIT_GROUP = "Edit group"
+BTEXT_EDIT_GROUP = "🔧Edit group"
 
 CALL_ADD_HOMEWORK = "c_add_homework_"
-BTEXT_ADD_HOMEWORK = "Add homework"
+BTEXT_ADD_HOMEWORK = "🖌Add homework"
 CALL_EDIT_HOMEWORK = "c_edit_homework_"
-BTEXT_EDIT_HOMEWORK = "Edit homework"
+BTEXT_EDIT_HOMEWORK = "🔧Edit homework"
 
 
 CALL_SET_SCHEME= 'c_set_scheme_'
-BTEXT_SET_SCHEME = "📌Set task by scheme"
+BTEXT_SET_SCHEME = "📌Assign task by scheme"
 
 CALL_SET_COLL = "c_set_coll"
-BTEXT_SET_COLL = "📌Set task with some collocation"
+BTEXT_SET_COLL = "📌Assign task with some collocation"
 
 
 
@@ -352,7 +362,7 @@ CALL_INPUT_SOURCE_NAME = "input_source_"
 CALL_CHANGING_SOURCE_NAME = "changing_source_name_"
 MESS_INPUT_SOURCE_NAME = "Введите имя источника"
 MESS_INPUT_SOURCE_NAME_ALREADY_EXIST = "Такой источник уже существует, попробуйте ввести имя источника еще раз"
-BTEXT_CHANGE_SOURCE_NAME = "Изменить источник"
+BTEXT_CHANGE_SOURCE_NAME = "Изменить название источника"
 # input word
 CALL_INPUT_WORD = "input_word_"
 CALL_CHANGING_WORD = "changing_word_"

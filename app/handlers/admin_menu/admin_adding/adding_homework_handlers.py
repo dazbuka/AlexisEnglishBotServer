@@ -8,13 +8,13 @@ from app.keyboards.menu_buttons import *
 from app.common_settings import *
 
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
-from app.utils.admin_utils import (message_answer, state_text_builder, add_item_in_aim_set_plus_plus)
+from app.admin_utils import (message_answer, state_text_builder, add_item_in_aim_set_plus_plus)
 from app.database.requests import (get_users_by_filters, get_groups_by_filters, set_homework, get_homeworks_by_filters,
                                    update_homework_editing)
 
 
-from app.handlers.admin_menu.states.state_executor import FSMExecutor
-from app.handlers.admin_menu.states.state_params import InputStateParams
+from app.handlers.states.loop_state_executor import FSMExecutor
+from app.handlers.states.loop_state_params import InputStateParams
 
 adding_homework_router = Router()
 
@@ -173,24 +173,24 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
 
         await state.update_data(author_id=homework.author_id)
 
-        edited_homework = homework.hometask
-        input_homework_state: InputStateParams = await state.get_value('input_homework_state')
-        input_homework_state.input_text = edited_homework
-        await state.update_data(input_homework_state=input_homework_state)
+        if homework.hometask:
+            input_homework_state: InputStateParams = await state.get_value('input_homework_state')
+            input_homework_state.input_text = homework.hometask
+            await state.update_data(input_homework_state=input_homework_state)
 
-        edited_users = {int(x) for x in homework.users.split(',')}
-        users_state: InputStateParams = await state.get_value('capture_users_state')
-        users_state.set_of_items = edited_users
-        await state.update_data(capture_users_state=users_state)
+        if homework.users:
+            users_state: InputStateParams = await state.get_value('capture_users_state')
+            users_state.set_of_items = {int(x) for x in homework.users.split(',')}
+            await state.update_data(capture_users_state=users_state)
 
-        edited_date = homework.time.strftime("%d.%m.%Y")
-        dates_state: InputStateParams = await state.get_value('capture_dates_state')
-        dates_state.set_of_items.add(edited_date)
-        await state.update_data(capture_dates_state=dates_state)
+        if homework.time:
+            dates_state: InputStateParams = await state.get_value('capture_dates_state')
+            dates_state.set_of_items.add(homework.time.strftime("%d.%m.%Y"))
+            await state.update_data(capture_dates_state=dates_state)
 
         confirmation_state: InputStateParams = await state.get_value('confirmation_state')
         confirmation_state.call_base = CALL_EDIT_HOMEWORK
-        confirmation_state.main_mess = MESS_CHANGING
+        # confirmation_state.main_mess = MESS_CHANGING
         await state.update_data(confirmation_state=confirmation_state)
 
 

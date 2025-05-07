@@ -136,9 +136,9 @@ async def state_text_builder(state):
     if 'capture_priority_state' in st_data:
         items = (st_data.get("capture_priority_state")).set_of_items
         items_list = []
-        for item in items_list:
+        for item in items:
             items_list.append(item)
-        text = ', '.join(items_list)
+        text = ', '.join(map(str, items_list))
         if text:
             message_text += f'Приоритет:\n<b>{text}</b>\n'
 
@@ -318,8 +318,6 @@ async def add_item_in_only_one_aim_set(aim_set: set, added_item: int | str) -> s
     # если число (как правило номер ид слова юзера и др)
     if isinstance(added_item, int):
         aim_set = {added_item}
-        print('внимание, ниже работает копи, участок памяти не меняется, здесь нет')
-        # aim_set.add(added_item)
     if isinstance(added_item, str):
         number_list = added_item.split(',')
         if number_list[0].isdigit():

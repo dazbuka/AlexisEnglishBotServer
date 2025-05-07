@@ -169,6 +169,7 @@ class InputStateParams:
         Обновляет пакет кнопок и базовый callback для выбора коллокаций.
         Args:
             colls_filter (str): Определяет фильтр для выбора коллокаций.
+            colls_set (set): Определяет список пользователей (он будет один) которому ищем задание
         """
 
         self.main_mess = MESS_QUICK_TASKS
@@ -182,7 +183,6 @@ class InputStateParams:
             elif colls_filter == 'all':
                 colls_list = await get_medias_by_filters()
             elif colls_filter == 'media':
-                print('here3')
                 colls_list = await get_medias_by_filters(media_only=True)
             else:
                 logger.warning('Некорректный фильтр коллокаций.')
@@ -425,9 +425,7 @@ class InputStateParams:
         self.buttons_check = CHECK_REVISION_SOURCES
         try:
             if sources_set:
-                print(sources_set)
                 sources_list = await get_sources_by_filters(source_id_set=sources_set)
-                print(sources_list)
             elif sources_filter == 'one':
                 sources_list = await get_sources_by_filters(source_id=1)
             else:

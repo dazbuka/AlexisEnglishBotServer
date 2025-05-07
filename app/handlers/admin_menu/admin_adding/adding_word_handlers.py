@@ -6,11 +6,11 @@ from aiogram.fsm.context import FSMContext
 from app.keyboards.menu_buttons import *
 from app.common_settings import *
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
-from app.utils.admin_utils import message_answer, state_text_builder
+from app.admin_utils import message_answer, state_text_builder
 from app.database.requests import get_users_by_filters, add_word_to_db, get_words_by_filters, update_word_changing
 from app.database.models import Word
-from app.handlers.admin_menu.states.state_executor import FSMExecutor
-from app.handlers.admin_menu.states.state_params import InputStateParams
+from app.handlers.states.loop_state_executor import FSMExecutor
+from app.handlers.states.loop_state_params import InputStateParams
 adding_word_router = Router()
 
 class AddWord(StatesGroup):
@@ -25,7 +25,7 @@ class AddWord(StatesGroup):
     confirmation_state = State()
 
 menu_add_word = [
-    [button_adding_menu_back, button_editing_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 menu_add_word_with_changing = [
@@ -35,7 +35,7 @@ menu_add_word_with_changing = [
     [update_button_with_call_base(button_change_translation, CALL_ADD_WORD),
      update_button_with_call_base(button_change_definition, CALL_ADD_WORD),
      update_button_with_call_base(button_change_sources, CALL_ADD_WORD)],
-    [button_adding_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 
@@ -226,13 +226,15 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
 
         await state.update_data(author_id=word.author_id)
 
-        input_word_state: InputStateParams = await state.get_value('input_word_state')
-        input_word_state.input_text = word.word
-        await state.update_data(input_word_state=input_word_state)
+        if word.word:
+            input_word_state: InputStateParams = await state.get_value('input_word_state')
+            input_word_state.input_text = str(word.word)
+            await state.update_data(input_word_state=input_word_state)
 
-        capture_sources_state: InputStateParams = await state.get_value('capture_sources_state')
-        capture_sources_state.set_of_items = {word.source_id}
-        await state.update_data(capture_sources_state=capture_sources_state)
+        if word.source_id:
+            capture_sources_state: InputStateParams = await state.get_value('capture_sources_state')
+            capture_sources_state.set_of_items = {word.source_id}
+            await state.update_data(capture_sources_state=capture_sources_state)
 
         if word.level:
             capture_levels_state: InputStateParams = await state.get_value('capture_levels_state')
@@ -244,13 +246,15 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
             capture_parts_state.set_of_items = {word.part}
             await state.update_data(capture_parts_state=capture_parts_state)
 
-        input_definition_state: InputStateParams = await state.get_value('input_definition_state')
-        input_definition_state.input_text = word.definition
-        await state.update_data(input_definition_state=input_definition_state)
+        if word.definition:
+            input_definition_state: InputStateParams = await state.get_value('input_definition_state')
+            input_definition_state.input_text = word.definition
+            await state.update_data(input_definition_state=input_definition_state)
 
-        input_translation_state: InputStateParams = await state.get_value('input_translation_state')
-        input_translation_state.input_text = word.translation
-        await state.update_data(input_translation_state=input_translation_state)
+        if word.translation:
+            input_translation_state: InputStateParams = await state.get_value('input_translation_state')
+            input_translation_state.input_text = word.translation
+            await state.update_data(input_translation_state=input_translation_state)
 
         confirmation_state: InputStateParams = await state.get_value('confirmation_state')
         confirmation_state.call_base = CALL_EDIT_WORD

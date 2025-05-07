@@ -6,12 +6,12 @@ from app.database.models import Source
 from app.keyboards.menu_buttons import *
 from app.common_settings import *
 from app.keyboards.keyboard_builder import keyboard_builder, update_button_with_call_base
-from app.utils.admin_utils import message_answer, state_text_builder
+from app.admin_utils import message_answer, state_text_builder
 from app.database.requests import (get_users_by_filters,  add_source_to_db, get_sources_by_filters,
                                    update_source_changing)
 
-from app.handlers.admin_menu.states.state_executor import FSMExecutor
-from app.handlers.admin_menu.states.state_params import (InputStateParams, )
+from app.handlers.states.loop_state_executor import FSMExecutor
+from app.handlers.states.loop_state_params import (InputStateParams, )
 adding_source_router = Router()
 
 class AddSource(StatesGroup):
@@ -21,12 +21,12 @@ class AddSource(StatesGroup):
     confirmation_state = State()
 
 menu_add_source = [
-    [button_adding_menu_back, button_editing_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 menu_add_source_with_changing = [
     [update_button_with_call_base(button_change_source_name, CALL_ADD_SOURCE)],
-    [button_adding_menu_back, button_admin_menu, button_main_menu_back]
+    [button_adding_menu_back, button_editing_menu_back, button_admin_menu_back, button_main_menu_back]
 ]
 
 
@@ -133,9 +133,10 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
 
         await state.update_data(author_id=source.author_id)
 
-        input_source_name_state: InputStateParams = await state.get_value('input_source_name_state')
-        input_source_name_state.input_text = source.source_name
-        await state.update_data(input_source_name_state=input_source_name_state)
+        if source.source_name:
+            input_source_name_state: InputStateParams = await state.get_value('input_source_name_state')
+            input_source_name_state.input_text = source.source_name
+            await state.update_data(input_source_name_state=input_source_name_state)
 
         confirmation_state: InputStateParams = await state.get_value('confirmation_state')
         confirmation_state.call_base = CALL_EDIT_SOURCE

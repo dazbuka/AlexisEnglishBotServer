@@ -64,6 +64,11 @@ button_set_coll = InlineKeyboardButton(text=BTEXT_SET_COLL, callback_data=CALL_S
 button_editing_menu = InlineKeyboardButton(text=BTEXT_EDITING_MENU, callback_data=CALL_EDITING_MENU)
 button_editing_menu_back = InlineKeyboardButton(text=BTEXT_EDITING_MENU_BACK, callback_data=CALL_EDITING_MENU)
 
+button_deleting_menu = InlineKeyboardButton(text=BTEXT_DELETING_MENU, callback_data=CALL_DELETING_MENU)
+button_deleting_menu_back = InlineKeyboardButton(text=BTEXT_DELETING_MENU_BACK, callback_data=CALL_DELETING_MENU)
+
+button_delete_task = InlineKeyboardButton(text=BTEXT_DELETE_TASK, callback_data=CALL_DELETE_TASK)
+
 button_update_user_intervals = InlineKeyboardButton(text=BTEXT_UPDATE_USER_INTERVALS, callback_data=CALL_UPDATE_USER_INTERVALS)
 button_delete_test_media = InlineKeyboardButton(text=BTEXT_DELETE_TEST_MEDIA, callback_data=CALL_DELETE_TEST_MEDIA)
 

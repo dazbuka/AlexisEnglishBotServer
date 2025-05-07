@@ -9,11 +9,11 @@ from aiogram.types import CallbackQuery, Message
 from app.keyboards.menu_buttons import *
 from app.common_settings import *
 from app.database.requests import get_tasks, get_medias_by_filters
-from app.utils.admin_utils import mess_answer, message_answer
+from app.admin_utils import mess_answer, message_answer
 from app.keyboards.keyboard_builder import keyboard_builder
 
-from app.handlers.admin_menu.states.state_params import InputStateParams
-from app.handlers.admin_menu.states.state_executor import FSMExecutor
+from app.handlers.states.loop_state_params import InputStateParams
+from app.handlers.states.loop_state_executor import FSMExecutor
 
 revision_router = Router()
 
