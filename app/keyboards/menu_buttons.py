@@ -3,7 +3,6 @@ from app.common_settings import *
 
 button_next_task = InlineKeyboardButton(text=BTEXT_NEXT_TASK, callback_data=CALL_NEXT_TASK)
 button_repeat_today = InlineKeyboardButton(text=BTEXT_REPEAT, callback_data=CALL_REPEAT)
-button_repeat_tomorrow = InlineKeyboardButton(text=BTEXT_REPEAT_TOMORROW, callback_data=CALL_REPEAT_TOMORROW)
 button_translation = InlineKeyboardButton(text=BTEXT_TRANSLATION, callback_data=CALL_TRANSLATION)
 button_definition = InlineKeyboardButton(text=BTEXT_DEFINITION, callback_data=CALL_DEFINITION)
 button_confirm = InlineKeyboardButton(text=BTEXT_CONFIRM, callback_data=CALL_CONFIRM)

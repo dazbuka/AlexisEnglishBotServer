@@ -36,12 +36,10 @@ BTEXT_DEFINITION= "🪄Definition"
 CALL_DEFINITION= "@definition_"
 BTEXT_TRANSLATION= "📗Translation"
 CALL_TRANSLATION= "@translation_"
-BTEXT_REPEAT="🔁Repeat later"
+BTEXT_REPEAT="🔁Revise later"
 CALL_REPEAT= "@repeat_today_"
 BTEXT_NEXT_TASK= "➡️Next"
 CALL_NEXT_TASK= "@next_"
-BTEXT_REPEAT_TOMORROW= "🔄Repeat tomorrow"
-CALL_REPEAT_TOMORROW= "@repeat_tomorrow_"
 
 
 ADMIN_BUTTON_UNBLOCK_USER = 'Разблокировать️'
@@ -66,15 +64,16 @@ MESS_TASKS_MENU_EMPTY = "You have no tasks!"
 BTEXT_TASKS_MENU= '🗓️My tasks'
 
 CALL_REVISION_MENU= '@m_revision_menu️'
-MESS_REVISION_MENU = "👇Choose any to revision!"
+MESS_REVISION_MENU = "👇Pick something out!"
 BTEXT_REVISION_MENU= '🔎Revision'
 BTEXT_REVISION_MENU_BACK = "🔎Revision"
+MESS_REVISION_MENU_EMPTY = 'Nothing for revision'
 
 CALL_LINKS_MENU= '@m_links_menu️'
-MESS_LINKS_MENU = "Choose link!"
-MESS_LINKS_MENU_EMPTY = "You have no links!"
+MESS_LINKS_MENU = "Pick out a link!"
+MESS_LINKS_MENU_EMPTY = "No links"
 BTEXT_LINKS_MENU= '🌏Links'
-BTEXT_LINKS_MENU_BACK = "Exit to links menu"
+BTEXT_LINKS_MENU_BACK = "🌏Links"
 NUM_SHOW_LINKS_COLS = 1
 NUM_SHOW_LINKS_ROWS = 7
 
@@ -87,13 +86,13 @@ MESS_YOUR_HOMEWORK='Your homework:'
 MESS_YOUR_HOMEWORK_EMPTY='🤷No homework🤷'
 
 CALL_CONFIG_MENU= '@m_config_menu️'
-MESS_CONFIG_MENU = "Welcome to config menu!"
+MESS_CONFIG_MENU = "Settings"
 BTEXT_CONFIG_MENU= '⚙️Settings'
 BTEXT_CONFIG_MENU_BACK = "⚙️Settings"
 
 CALL_CONFIG_SENDING_TIME= '@m_config_sending_time️'
-BTEXT_CONFIG_SENDING_TIME= '⏰Reminder time⏰'
-MESS_CONFIG_SENDING_TIME = "🕒Pick a slot for a reminder (MSK).🕝"
+BTEXT_CONFIG_SENDING_TIME= '⏰Reminder time'
+MESS_CONFIG_SENDING_TIME = "🕒Set reminder time (MSK)"
 NUM_CONFIG_SENDING_TIME_COLS = 4
 NUM_CONFIG_SENDING_TIME_ROWS = 4
 CHECK_CONFIG_SENDING_TIME = '🟣'
@@ -104,9 +103,9 @@ BTEXT_ADMIN_MENU= '🔐Admin menu NEW'
 BTEXT_ADMIN_MENU_BACK = "⬆️Admin menu"
 
 CALL_REVISION_SOURCES= '@m_revision_sources_menu️'
-MESS_REVISION_SOURCES = 'Choose source or print part of source name to find'
-MESS_REVISION_SOURCES_MENU_EMPTY = "You have no sources!"
-BTEXT_REVISION_SOURCES_MENU= '🎬Revision sources'
+MESS_REVISION_SOURCES = "Pick out what you'd like to revise or type a source you need to find"
+MESS_REVISION_SOURCES_EMPTY = "No sources for revision!"
+BTEXT_REVISION_SOURCES_MENU= '🎬Sources'
 BTEXT_REVISION_SOURCES_MENU_BACK = "🎬Sources"
 
 NUM_REVISION_SOURCES_COLS = 1
@@ -114,24 +113,22 @@ NUM_REVISION_SOURCES_ROWS = 5
 CHECK_REVISION_SOURCES= '🟣'
 
 CALL_REVISION_WORDS= '@m_revision_words_️'
-MESS_REVISION_WORDS_MENU = "Choose word or print part of word to find"
-BTEXT_REVISION_WORDS_MENU= '📚Revision words'
+MESS_REVISION_WORDS_MENU = "Pick out what you'd like to revise or type a word you need to find"
+BTEXT_REVISION_WORDS_MENU= '📚Words'
+MESS_REVISION_WORDS_EMPTY = "No words for revision!"
 BTEXT_REVISION_WORDS_MENU_BACK = "📚Words"
 NUM_REVISION_WORDS_COLS = 1
 NUM_REVISION_WORDS_ROWS = 5
 CHECK_REVISION_WORDS = '🟣'
 
 CALL_REVISION_COLLS= '@m_revision_colls_menu️'
-BTEXT_REVISION_COLLS_MENU= '📜Revision collocations'
-MESS_REVISION_COLLS_MENU = 'Choose collocation or print part of collocation to find'
+BTEXT_REVISION_COLLS_MENU= '📜Collocations'
 BTEXT_REVISION_COLLS_MENU_BACK = "📜Collocations"
+MESS_REVISION_COLLS = "Pick out what you'd like to revise or type a collocation you need to find"
+NUM_REVISION_COLLS_COLS = 1
+NUM_REVISION_COLLS_ROWS = 10
+CHECK_REVISION_COLLS= '🟣'
 
-# show links
-CALL_SHOW_TASKS = "show_links_"
-MESS_SHOW_TASKS = 'Выберите коллокацию'
-NUM_SHOW_TASKS_COLS = 1
-NUM_SHOW_TASKS_ROWS = 5
-CHECK_REVISION_TASKS= '🟣'
 
 
 CALL_ADDING_MENU = "@c_adm_menu_add"
@@ -209,21 +206,18 @@ BTEXT_SET_COLL = "📌Assign task with some collocation"
 
 # common
 MESS_CHANGING = 'Внесите изменения!'
-MESS_MORE_CHOOSING = 'Можете выбрать еще или нажмите подтверждение'
+MESS_MORE_CHOOSING = 'Pick out or confirm'
 MESS_NULL_CHOOSING = 'Нельзя продолжить пока ничего не выбрано'
-MESS_ADDED_TO_DB = 'Информация добавлена в базу данных!'
+MESS_ADDED_TO_DB = 'Done!'
 MESS_ERROR_ADDED_TO_DB = 'Ошибка при записи в базу данных, обратитесь к администратору'
 CALL_CONFIRM= "@confirm_"
 BTEXT_CONFIRM= "✅CONFIRM✅"
 NUM_MAX_CALL_ALARM_LENGTH = 192
 MESS_TOO_LONG = "Длина введенного текста превышает максимально допустимую на {} символов. Попробуйте еще раз."
 
-
+MESS_DELETE_ENDING = 'Поверьте и подтвердите удаление'
 MESS_ADD_ENDING = 'Поверьте все и подтвердите'
 CALL_ADD_ENDING = "add_ending_"
-
-
-
 
 # capturing word
 CALL_CAPTURE_WORDS = "capture_words_"
@@ -241,21 +235,19 @@ CALL_CHANGING_COLLS = "changing_colls_"
 MESS_CAPTURE_COLLS = 'Выберите коллокацию или введите с клавиатуры и отправьте боту ее часть'
 BTEXT_CHANGE_COLLS = "Изменить коллокации"
 MESS_NO_COLLS = 'Список коллокаций пуст'
-NUM_CAPTURE_COLLS_COLS = 2
+NUM_CAPTURE_COLLS_COLS = 1
 NUM_CAPTURE_COLLS_ROWS = 10
 CHECK_CAPTURE_COLLS= '🟣'
 
-# show colls
-MESS_REVISION_COLLS = 'Выберите коллокацию или введите ее часть'
-NUM_REVISION_COLLS_COLS = 2
-NUM_REVISION_COLLS_ROWS = 5
-CHECK_REVISION_COLLS= '🟣'
+
 
 # show colls
 MESS_QUICK_TASKS = 'Выберите коллокацию'
 NUM_QUICK_TASK_COLS = 1
 NUM_QUICK_TASK_ROWS = 1
 CHECK_QUICK_TASK = '🟣'
+
+
 
 
 # capturing part
@@ -343,8 +335,17 @@ MESS_CAPTURE_HOMEWORKS = 'Выберите домашнее задание ил�
 BTEXT_CHANGE_HOMEWORKS = "Изменить домашнее задание"
 MESS_NO_HOMEWORKS = 'Список домашних заданий пуст'
 NUM_CAPTURE_HOMEWORKS_COLS = 1
-NUM_CAPTURE_HOMEWORKS_ROWS = 5
+NUM_CAPTURE_HOMEWORKS_ROWS = 10
 CHECK_CAPTURE_HOMEWORKS= '🟣'
+
+# capturing tasks
+CALL_CAPTURE_TASKS = "capture_tasks_"
+MESS_CAPTURE_TASKS = 'Выберите задание или введите с клавиатуры'
+MESS_DELETING_TASKS = 'Выберите задание для удаления или введите с клавиатуры'
+MESS_NO_TASKS = 'Список заданий пуст'
+NUM_CAPTURE_TASKS_COLS = 1
+NUM_CAPTURE_TASKS_ROWS = 10
+CHECK_CAPTURE_TASKS= '🟣'
 
 
 CALL_CAPTURE_LINKS = "capture_links_"

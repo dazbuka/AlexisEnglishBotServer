@@ -23,7 +23,7 @@ async def send_reminders(bot: Bot):
             if tasks:
                 reply_kb = await keyboard_builder(menu_pack=[[button_quick_menu, button_main_menu]])
                 if len(tasks) < 11:
-                    tasks_text = ', '.join({task.media.collocation for task in tasks})
+                    tasks_text = '\n- '.join({task.media.collocation for task in tasks})
                     message_text = f'{MESS_YOU_HAVE_TASKS.format(len(tasks))}\n\nCollocations: {tasks_text}'
                 else:
                     message_text = f'{MESS_YOU_HAVE_TASKS.format(len(tasks))}'

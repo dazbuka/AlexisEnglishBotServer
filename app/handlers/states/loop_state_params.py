@@ -1,10 +1,10 @@
 from typing import Optional
 from aiogram.types import InlineKeyboardButton
 from aiogram.fsm.state import State
-
+from app.database.models import Group, Task
 from app.common_settings import *
 from app.database.requests import get_users_by_filters, get_words_by_filters, get_sources_by_filters, \
-    get_groups_by_filters, get_medias_by_filters, get_homeworks_by_filters, get_links_by_filters
+    get_groups_by_filters, get_medias_by_filters, get_homeworks_by_filters, get_links_by_filters, get_tasks_by_filters
 from config import logger
 from app.database.models import UserStatus
 from datetime import date, timedelta
@@ -134,9 +134,9 @@ class InputStateParams:
 
         try:
             if colls_set:
-                colls_list = await get_medias_by_filters(media_id_set=colls_set)
+                colls_list = await get_medias_by_filters(media_id_set=colls_set, media_only=True)
             elif word_id:
-                colls_list = await get_medias_by_filters(word_id=word_id)
+                colls_list = await get_medias_by_filters(word_id=word_id, media_only=True)
             elif colls_filter == 'all':
                 colls_list = await get_medias_by_filters()
             elif colls_filter == 'media':
@@ -207,6 +207,42 @@ class InputStateParams:
             logger.error(
                 f'Произошла ошибка при получении коллокаций при обновлении класса CaptureCollsStateParams: {e}')
 
+    async def update_state_for_deleting_tasks(self, user_id=None, colls_filter: str = 'all') -> None:
+        self.main_mess = MESS_DELETING_TASKS
+        self.buttons_cols = NUM_CAPTURE_TASKS_COLS
+        self.buttons_rows = NUM_CAPTURE_TASKS_ROWS
+        self.buttons_check = CHECK_CAPTURE_TASKS
+
+        try:
+            if user_id:
+                tasks_list : list[Task] = await get_tasks_by_filters(user_id=user_id, sent=False, daily_and_future=True)
+            elif colls_filter == 'all':
+                tasks_list : list[Task] = await get_tasks_by_filters()
+            else:
+                logger.warning('Некорректный фильтр заданий.')
+                return
+
+            if not tasks_list:
+                self.main_mess = MESS_NO_TASKS
+                self.buttons_pack = []
+                logger.warning('Список заданий пуст. Кнопки не обновлены.')
+                return
+
+            # Формируем клавиатуру
+            tasks_kb = [
+                InlineKeyboardButton(text=f'uid:{task.user_id} - {task.time.strftime("%d.%m.%Y")} - '
+                                          f'{task.media.collocation}',
+                                     callback_data=f'{self.call_base}{task.id}')
+                for task in tasks_list]
+
+            tasks_kb_reversed = tasks_kb[::-1]
+
+            # Устанавливаем значение
+            self.buttons_pack = tasks_kb_reversed
+        except Exception as e:
+            logger.error(
+                f'Произошла ошибка при получении заданий при обновлении класса CaptureTasks: {e}')
+
     async def update_state_for_users_capture(self, users_filter: str = 'all') -> None:
         self.main_mess = MESS_CAPTURE_USERS
         self.buttons_cols = NUM_CAPTURE_USERS_COLS
@@ -274,7 +310,7 @@ class InputStateParams:
         self.buttons_rows = NUM_REVISION_WORDS_ROWS
         self.buttons_check = CHECK_REVISION_WORDS
         try:
-            if words_set:
+            if words_set or isinstance(words_set,set):
                 words_list = await get_words_by_filters(word_id_set=words_set)
             elif source_id:
                 words_list = await get_words_by_filters(source_id=source_id)
@@ -284,8 +320,8 @@ class InputStateParams:
                 logger.warning('Некорректный фильтр слов.')
                 return
 
-            if not words_list:
-                self.main_mess = MESS_NO_WORDS
+            if not words_list or not words_set:
+                self.main_mess = MESS_REVISION_WORDS_EMPTY
                 logger.warning('Список слов пуст. Кнопки не обновлены.')
                 return
 
@@ -399,7 +435,7 @@ class InputStateParams:
             if sources_filter == 'all':
                 sources_list = await get_sources_by_filters()
             else:
-                logger.warning('Некорректный фильтр источника.')
+                logger.warning('Некорректный фильтр источника при выборе всех источников.')
                 return
 
             if not sources_list:
@@ -424,17 +460,16 @@ class InputStateParams:
         self.buttons_rows = NUM_REVISION_SOURCES_ROWS
         self.buttons_check = CHECK_REVISION_SOURCES
         try:
-            if sources_set:
+            if sources_set or isinstance(sources_set,set):
                 sources_list = await get_sources_by_filters(source_id_set=sources_set)
             elif sources_filter == 'one':
                 sources_list = await get_sources_by_filters(source_id=1)
             else:
-
-                logger.warning('Некорректный фильтр источника.')
+                logger.warning('Некорректный фильтр источника ревижн.')
                 return
 
-            if not sources_list:
-                self.main_mess = MESS_NO_SOURCES
+            if not sources_list or not sources_set:
+                self.main_mess = MESS_REVISION_SOURCES_EMPTY
                 logger.warning('Список источников пуст. Кнопки не обновлены.')
                 return
 
@@ -502,5 +537,8 @@ class InputStateParams:
 
     async def update_state_for_confirmation_state(self) -> None:
         self.main_mess = MESS_ADD_ENDING
+
+    async def update_state_for_delete_confirmation_state(self) -> None:
+        self.main_mess = MESS_DELETE_ENDING
 
 

@@ -20,6 +20,7 @@ from app.handlers.admin_menu.admin_adding.adding_coll_handlers import adding_col
 from app.handlers.admin_menu.admin_adding.adding_group_handlers import adding_group_router
 from app.handlers.admin_menu.admin_adding.adding_homework_handlers import adding_homework_router
 from app.handlers.admin_menu.admin_adding.adding_links_handlers import adding_link_router
+from app.handlers.admin_menu.admin_deleting.deleting_task_handlers import deleting_task_router
 from app.handlers.common_menu.links_handlers import links_router
 from app.handlers.common_menu.tasks_handlers import tasks_router
 from app.handlers.common_menu.revision_handlers import revision_router
@@ -35,6 +36,7 @@ menu_router.include_router(adding_homework_router)
 menu_router.include_router(adding_link_router)
 menu_router.include_router(setting_scheme_router)
 menu_router.include_router(setting_colls_router)
+menu_router.include_router(deleting_task_router)
 menu_router.include_router(links_router)
 menu_router.include_router(tasks_router)
 menu_router.include_router(revision_router)
@@ -61,6 +63,7 @@ async def command_start(message: Message, state: FSMContext):
     print('10. разработай полностью новую систему тестов')
     print('11. список юзеров в таблице группы может быть пустым, поменять алембиком')
     print('12. revision logger')
+    print('13. config можно оставить пустые напоминалки')
     # чистим стейт
     await state.clear()
     # проверяем пользователя и регистрируем при необходимости
@@ -76,7 +79,7 @@ async def command_start(message: Message, state: FSMContext):
     if message.from_user.id in ADMIN_IDS:
         await main_menu_params.update_with_admin_menu()
     current_menu_params = main_menu_params
-    tasks: list[Task] = await get_tasks(user_tg_id=message.from_user.id, for_quick_tasks_menu=True)
+    tasks: list[Task] = await get_tasks(request_user_tg_id=message.from_user.id, for_quick_tasks_menu=True)
     if tasks:
         current_menu_params.curr_menu[0][0] = update_button_with_tasks_num(current_menu_params.curr_menu[0][0], len(tasks))
 
@@ -181,7 +184,7 @@ async def admin_menu_setting_button(call: CallbackQuery, state: FSMContext):
                                            curr_main_mess=MESS_MAIN_MENU)
         if call.from_user.id in ADMIN_IDS:
             await main_menu_params.update_with_admin_menu()
-        tasks: list[Task] = await get_tasks(user_tg_id=call.from_user.id, for_quick_tasks_menu=True)
+        tasks: list[Task] = await get_tasks(request_user_tg_id=call.from_user.id, for_quick_tasks_menu=True)
         current_state_params = main_menu_params
         if tasks:
             current_state_params.curr_menu[0][0] = update_button_with_tasks_num(current_state_params.curr_menu[0][0],

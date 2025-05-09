@@ -24,7 +24,7 @@ class TasksState(StatesGroup):
 @tasks_router.callback_query(F.data.startswith(CALL_TASKS_MENU))
 async def tasks_main(call: CallbackQuery, state: FSMContext):
     await state.set_state(TasksState.tasks_state)
-    tasks : list[Task] = await get_tasks(user_tg_id=call.from_user.id, for_quick_tasks_menu=True)
+    tasks : list[Task] = await get_tasks(request_user_tg_id=call.from_user.id, for_quick_tasks_menu=True)
     if tasks:
         curr_task = tasks[0]
         media_id = curr_task.media_id
@@ -60,18 +60,14 @@ async def tasks_main(call: CallbackQuery, state: FSMContext):
 
 
         # формируем сообщение
-        # коллокация
-        message_text = f'Collocation: <b>{curr_task.media.collocation}</b>'
-        # если есть кэпшн - добавляем
+        message_text = ''
         if curr_task.media.caption:
-            message_text += f'\n\n{curr_task.media.caption}'
-        # формируем примечание
-        add_text = f'- task for {curr_task.time.strftime('%d.%m.%Y')} - word: <b>{curr_task.media.word.word}</b> - '
+            message_text += f'{curr_task.media.caption}\n\n'
+        # add_text = f'- task for {curr_task.time.strftime('%d.%m.%Y')} - word: <b>{curr_task.media.word.word}</b> - '
+        message_text += f'Collocation: <b>{curr_task.media.collocation}</b>\nWord: <b>{curr_task.media.word.word}</b>'
         if curr_task.media.word.source_id:
-            add_text += f'source: {curr_task.media.word.source.source_name} -'
-        add_text = '<i>' + add_text + '</i>'
-        # добавляем примечание
-        message_text += f'\n\n{add_text}'
+            message_text += f'\nSource: <b>{curr_task.media.word.source.source_name}</>'
+
 
         await mess_answer(source=call,
                           media_type=curr_task.media.media_type,

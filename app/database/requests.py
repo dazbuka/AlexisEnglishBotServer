@@ -406,6 +406,30 @@ async def delete_media_from_db(media_id : int):
             logger.error(f"Произошла ошибка при удалении медиа: {e}")
 
 
+# удаление task
+async def delete_task_from_db(task_id : int) -> bool:
+    async with async_session() as session:
+        try:
+            # Сначала находим объект Task по его идентификатору
+            task_stmt = select(Task).where(Task.id == task_id)
+            result = await session.execute(task_stmt)
+            task = result.scalar_one_or_none()
+
+            if task is None:
+                raise NoResultFound(f"Task с ID {task_id} не найдено.")
+
+            # Удаляем найденный объект
+            await session.delete(task)
+            await session.commit()
+            logger.info(f"Успешно удалил task с ID {task_id}.")
+            return True
+        except NoResultFound as e:
+            logger.warning(e)
+            return False
+        except SQLAlchemyError as e:
+            logger.error(f"Произошла ошибка при удалении task: {e}")
+            return False
+
 
 async def update_media_changing(media_id, media_type, word_id, collocation, caption, study_day,
                                 author_id, telegram_id = None, level = None) -> bool:
@@ -457,6 +481,7 @@ async def get_tasks_by_filters(task_id: int = None,
                                user_tg_id : int | BigInteger = None,
                                sent: bool = None,
                                daily_and_missed: bool = False,
+                               daily_and_future: bool = False,
                                media_task_only: bool = False):
     async with async_session() as session:
         try:
@@ -479,6 +504,10 @@ async def get_tasks_by_filters(task_id: int = None,
             if daily_and_missed:
                 end_of_day = datetime.combine(datetime.now().date(), time()) + timedelta(days=1)
                 selection = selection.filter(Task.time<end_of_day)
+
+            if daily_and_future:
+                start_of_day = datetime.combine(datetime.now().date(), time())
+                selection = selection.filter(Task.time>start_of_day).order_by(Task.created_at.desc())
 
             if media_task_only:
                 selection = selection.join(Media)
@@ -503,36 +532,34 @@ async def get_tasks_by_filters(task_id: int = None,
             logger.error(f"Ошибка при поиске заданий: {e}")
 
 
-async def get_tasks(user_id: int = None,
-                    user_tg_id : int | BigInteger = None,
+async def get_tasks(request_user_id: int = None,
+                    request_user_tg_id : int | BigInteger = None,
                     sent: bool = None,
                     media_task_only: bool = None,
                     for_quick_tasks_menu: bool = None):
     async with async_session() as session:
         try:
-            selection = select(Task)
+            selection = select(Task).join(Media)
 
-            if user_id:
-                selection = selection.filter(Task.user_id==user_id)
+            if request_user_id:
+                selection = selection.filter(Task.user_id == request_user_id)
 
-            if user_tg_id:
+            if request_user_tg_id:
                 # selection =select(User,Task).join(Task,User.tasks_as_user)
-                selection = selection.join(User.tasks)
-                selection = selection.filter(User.telegram_id == user_tg_id).order_by(Task.time.desc())
+                selection = selection.join(User, Task.user_id == User.id)
+                selection = selection.filter(User.telegram_id == request_user_tg_id).order_by(Task.time.desc())
 
             if sent is not None:
                 selection = selection.filter(Task.sent == sent)
 
             if media_task_only:
-                selection = selection.join(Media)
-                selection = selection.filter(Media.media_type.startswith('test') == False)
+                selection = selection.filter(~Media.media_type.startswith('test'))
 
             if for_quick_tasks_menu:
                 selection = selection.filter(Task.sent == False)
                 today_start = datetime.combine(date.today(), datetime.min.time())  # Начало текущего дня
                 tomorrow_start = today_start + timedelta(days=1)
                 selection = selection.filter(Task.time < tomorrow_start)
-                selection = selection.join(Media)
                 selection = selection.filter(Media.media_type.startswith('test') == False)
 
 

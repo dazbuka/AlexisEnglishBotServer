@@ -3,7 +3,7 @@ import app.database.requests as rq
 from config import logger
 from aiogram.types import Message, CallbackQuery
 from app.common_settings import *
-
+from app.database.models import Group, Task
 
 def logger_decorator(func):
     async def wrapper(*args, **kwargs):
@@ -153,14 +153,25 @@ async def state_text_builder(state):
             message_text += f'Выбраны слова:\n<b>{text}</b>\n'
 
     if 'capture_colls_state' in st_data:
-        colls = (st_data.get("capture_colls_state")).set_of_items
-        colls_list = []
-        for coll_id in colls:
-            coll = (await rq.get_medias_by_filters(media_id_new=coll_id)).collocation
-            colls_list.append(coll)
-        text = ', '.join(colls_list)
+        tasks = (st_data.get("capture_colls_state")).set_of_items
+        tasks_list = []
+        for task_id in tasks:
+            task = (await rq.get_medias_by_filters(media_id_new=task_id)).collocation
+            tasks_list.append(task)
+        text = ', '.join(tasks_list)
         if text:
             message_text += f'Выбраны коллокации:\n<b>{text}</b>\n'
+
+    if 'capture_tasks_state' in st_data:
+        tasks = (st_data.get("capture_tasks_state")).set_of_items
+        tasks_list = []
+        for task_id in tasks:
+            task : Task = await rq.get_tasks_by_filters(task_id_new=task_id)
+            task_str = f'uid:{task.user_id} - {task.time.strftime("%d.%m.%Y")} - {task.media.collocation}'
+            tasks_list.append(task_str)
+        text = ', '.join(tasks_list)
+        if text:
+            message_text += f'Выбраны задания:\n<b>{text}</b>\n'
 
     if 'input_coll_state' in st_data:
         word = (st_data.get("input_coll_state")).input_text
