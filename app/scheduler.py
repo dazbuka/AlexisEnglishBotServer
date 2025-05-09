@@ -12,6 +12,7 @@ from app.keyboards.menu_buttons import *
 async def send_reminders(bot: Bot):
     user_list : list[User]= await rq.get_users_by_filters(status='ACTIVE')
     now_time = datetime.now().time().strftime("%H:%M")
+    now_date = datetime.now().date().strftime("%d.%m.%Y")
     # перебираем всех пользователей
     for user in user_list:
         interval_list = user.intervals.split(',')
@@ -24,10 +25,7 @@ async def send_reminders(bot: Bot):
                 reply_kb = await keyboard_builder(menu_pack=[[button_quick_menu, button_main_menu]])
                 if len(tasks) < 11:
                     tasks_text = '\n- '.join({task.media.collocation for task in tasks})
-                    message_text = (f"AlexisEnglishBot has been updated! "
-                                    f"It's recommended to clear history or start "
-                                    f"by tapping the start button."
-                                    f"\n{MESS_YOU_HAVE_TASKS.format(len(tasks))}\n\nCollocations: {tasks_text}")
+                    message_text = f'{MESS_YOU_HAVE_TASKS.format(len(tasks))}\n\nCollocations: {tasks_text}'
                 else:
                     message_text = f'{MESS_YOU_HAVE_TASKS.format(len(tasks))}'
                 reminder_mess = await bot.send_message(chat_id=user.telegram_id,
@@ -40,9 +38,17 @@ async def send_reminders(bot: Bot):
                 await rq.update_user_last_message_id(user_tg_id=user.telegram_id, message_id=reminder_mess.message_id)
 
     # сообщение мне, временно
-    if now_time[4:6] == '00':
+    if now_time[3:5] == '00':
         reply_kb = await keyboard_builder(menu_pack=[[button_main_menu]])
-        await bot.send_message(DEVELOPER_ID, f'Time: {now_time} - {len(user_list)} users', reply_markup=reply_kb)
+        await bot.send_message(DEVELOPER_ID, f'Time: {now_time} - {len(user_list)} active users', reply_markup=reply_kb)
+
+    if now_time[0:5] == '14:30' and now_date == '09.05.2025' :
+        for user in user_list:
+            reply_kb = await keyboard_builder(menu_pack=[[button_main_menu]])
+            await bot.send_message(user.telegram_id, f"AlexisEnglishBot has been updated. "
+                                                          f"It is recommended to clear the history and "
+                                                          f"start by tapping the main menu or start button.",
+                                                          reply_markup=reply_kb)
 
 async def check_reminders(bot: Bot):
     while True:
