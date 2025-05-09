@@ -24,7 +24,10 @@ async def send_reminders(bot: Bot):
                 reply_kb = await keyboard_builder(menu_pack=[[button_quick_menu, button_main_menu]])
                 if len(tasks) < 11:
                     tasks_text = '\n- '.join({task.media.collocation for task in tasks})
-                    message_text = f'{MESS_YOU_HAVE_TASKS.format(len(tasks))}\n\nCollocations: {tasks_text}'
+                    message_text = (f"AlexisEnglishBot has been updated! "
+                                    f"It's recommended to clear history or start "
+                                    f"by tapping the start button."
+                                    f"\n{MESS_YOU_HAVE_TASKS.format(len(tasks))}\n\nCollocations: {tasks_text}")
                 else:
                     message_text = f'{MESS_YOU_HAVE_TASKS.format(len(tasks))}'
                 reminder_mess = await bot.send_message(chat_id=user.telegram_id,
