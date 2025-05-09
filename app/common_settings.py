@@ -55,7 +55,7 @@ MESS_HELP = 'Hello, this is help!🤗 ... '
 MESS_DONT_UNDERSTAND= "Can't understand you, press any button:"
 
 CALL_MAIN_MENU= '@m_main_menu️'
-MESS_MAIN_MENU = "🧑‍🏫Hi, I'm AlexisEnglishBot!\n🕹Press any button👇"
+MESS_MAIN_MENU = "🧑‍🏫Hi, I'm AlexisEnglishBot!\n👇Press any button"
 BTEXT_MAIN_MENU = "⬆️Main menu"
 BTEXT_MAIN_MENU_BACK = "⬆️Main menu"
 
@@ -70,7 +70,7 @@ BTEXT_REVISION_MENU_BACK = "🔎Revision"
 MESS_REVISION_MENU_EMPTY = 'Nothing for revision'
 
 CALL_LINKS_MENU= '@m_links_menu️'
-MESS_LINKS_MENU = "Pick out a link!"
+MESS_LINKS_MENU = "👇Pick out a link!"
 MESS_LINKS_MENU_EMPTY = "No links"
 BTEXT_LINKS_MENU= '🌏Links'
 BTEXT_LINKS_MENU_BACK = "🌏Links"
@@ -103,7 +103,7 @@ BTEXT_ADMIN_MENU= '🔐Admin menu NEW'
 BTEXT_ADMIN_MENU_BACK = "⬆️Admin menu"
 
 CALL_REVISION_SOURCES= '@m_revision_sources_menu️'
-MESS_REVISION_SOURCES = "Pick out what you'd like to revise or type a source you need to find"
+MESS_REVISION_SOURCES = "👇Pick out what you'd like to revise or type a source you need to find"
 MESS_REVISION_SOURCES_EMPTY = "No sources for revision!"
 BTEXT_REVISION_SOURCES_MENU= '🎬Sources'
 BTEXT_REVISION_SOURCES_MENU_BACK = "🎬Sources"
@@ -113,7 +113,7 @@ NUM_REVISION_SOURCES_ROWS = 5
 CHECK_REVISION_SOURCES= '🟣'
 
 CALL_REVISION_WORDS= '@m_revision_words_️'
-MESS_REVISION_WORDS_MENU = "Pick out what you'd like to revise or type a word you need to find"
+MESS_REVISION_WORDS_MENU = "👇Pick out what you'd like to revise or type a word you need to find"
 BTEXT_REVISION_WORDS_MENU= '📚Words'
 MESS_REVISION_WORDS_EMPTY = "No words for revision!"
 BTEXT_REVISION_WORDS_MENU_BACK = "📚Words"
@@ -124,7 +124,7 @@ CHECK_REVISION_WORDS = '🟣'
 CALL_REVISION_COLLS= '@m_revision_colls_menu️'
 BTEXT_REVISION_COLLS_MENU= '📜Collocations'
 BTEXT_REVISION_COLLS_MENU_BACK = "📜Collocations"
-MESS_REVISION_COLLS = "Pick out what you'd like to revise or type a collocation you need to find"
+MESS_REVISION_COLLS = "👇Pick out what you'd like to revise or type a collocation you need to find"
 NUM_REVISION_COLLS_COLS = 1
 NUM_REVISION_COLLS_ROWS = 10
 CHECK_REVISION_COLLS= '🟣'
@@ -149,15 +149,8 @@ BTEXT_DELETING_MENU_BACK = "⬆️Deleting"
 CALL_DELETE_TASK= 'c_delete_task_'
 BTEXT_DELETE_TASK = "🪣Delete task"
 
-
-CALL_UPDATE_USER_INTERVALS = "@c_update_user_intervals"
-BTEXT_UPDATE_USER_INTERVALS = "*Temp*🧹Update user intervals"
-
-CALL_DELETE_TEST_MEDIA = "@c_delete_test_media"
-BTEXT_DELETE_TEST_MEDIA = "*Temp*🪣Delete test media"
-
 CALL_SETTING_MENU = "@c_adm_menu_set"
-MESS_SETTING_MENU = "Choose what do you want to set or assign"
+MESS_SETTING_MENU = "👇Choose what do you want to set or assign"
 BTEXT_SETTING_MENU = "📌Assign task to user"
 BTEXT_SETTING_MENU_BACK = "⬆️Assign"
 
@@ -206,7 +199,7 @@ BTEXT_SET_COLL = "📌Assign task with some collocation"
 
 # common
 MESS_CHANGING = 'Внесите изменения!'
-MESS_MORE_CHOOSING = 'Pick out or confirm'
+MESS_MORE_CHOOSING = '👇Pick out or confirm'
 MESS_NULL_CHOOSING = 'Нельзя продолжить пока ничего не выбрано'
 MESS_ADDED_TO_DB = 'Done!'
 MESS_ERROR_ADDED_TO_DB = 'Ошибка при записи в базу данных, обратитесь к администратору'

@@ -64,7 +64,7 @@ async def tasks_main(call: CallbackQuery, state: FSMContext):
         if curr_task.media.caption:
             message_text += f'{curr_task.media.caption}\n\n'
         # add_text = f'- task for {curr_task.time.strftime('%d.%m.%Y')} - word: <b>{curr_task.media.word.word}</b> - '
-        message_text += f'Collocation: <b>{curr_task.media.collocation}</b>\nWord: <b>{curr_task.media.word.word}</b>'
+        message_text += f'Collocation: <b>{curr_task.media.collocation}</b>'
         if curr_task.media.word.source_id:
             message_text += f'\nSource: <b>{curr_task.media.word.source.source_name}</>'
 

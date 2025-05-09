@@ -13,28 +13,6 @@ from app.database.models import User, Media
 
 common_router = Router()
 
-@common_router.callback_query(F.data == CALL_DELETE_TEST_MEDIA)
-async def update(call: CallbackQuery, state: FSMContext):
-    await state.clear()
-    # вытаскиваем из колбека номер пользователя
-    medias : list[Media]= await get_medias_by_filters(test_only=True)
-    for media in medias:
-        await delete_media_from_db(media.id)
-    await call.answer('Tests deleted')
-
-@common_router.callback_query(F.data == CALL_UPDATE_USER_INTERVALS)
-async def update(call: CallbackQuery, state: FSMContext):
-    await state.clear()
-    # вытаскиваем из колбека номер пользователя
-    users : list[User]= await get_users_by_filters()
-    for user in users:
-        curr_int_list = user.intervals.split(',')
-        curr_int_list_new = [x[:5] for x in curr_int_list]
-        new_str = ','.join(curr_int_list_new)
-        await update_user_intervals_temp_alembic(user_id=user.id, intervals=new_str)
-    # меняем статус
-    await call.answer('Intervals updated')
-
 
 # разблокировка или удаление пользователя
 @common_router.callback_query(F.data.startswith(ADMIN_BUTTON_UNBLOCK_USER))

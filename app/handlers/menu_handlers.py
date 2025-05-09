@@ -111,8 +111,6 @@ async def admin_menu_setting_button(call: CallbackQuery, state: FSMContext):
                                                    [button_editing_menu],
                                                    [button_setting_menu],
                                                    [button_deleting_menu],
-                                                   [button_update_user_intervals],
-                                                   [button_delete_test_media],
                                                    [button_main_menu_back]
                                                ],
                                                curr_main_mess=MESS_ADMIN_MENU)

@@ -127,9 +127,8 @@ async def revision_collocations_loop(call: CallbackQuery, state: FSMContext):
         await mess_answer(source=call,
                           media_type=media.media_type,
                           media_id=media.telegram_id,
-                          message_text=f'Collocation: <b>{media.collocation}</b>\n\n'
-                                       f'{media.caption}\n\n'
-                                       f'Word: <b>{media.word.word}</b>',
+                          message_text=f'{media.caption}\n\n'
+                                       f'Collocation: <b>{media.collocation}</b>\n\n',
                           reply_markup=current_fsm.reply_kb)
     # это для случая когда сразу нажимают карусельку
     else:
