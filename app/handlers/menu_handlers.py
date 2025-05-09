@@ -64,6 +64,7 @@ async def command_start(message: Message, state: FSMContext):
     print('11. список юзеров в таблице группы может быть пустым, поменять алембиком')
     print('12. revision logger')
     print('13. config можно оставить пустые напоминалки')
+    print('14. сделать статистику')
     # чистим стейт
     await state.clear()
     # проверяем пользователя и регистрируем при необходимости

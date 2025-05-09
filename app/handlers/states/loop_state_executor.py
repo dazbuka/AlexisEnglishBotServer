@@ -105,7 +105,7 @@ class FSMExecutor:
             if current_state_params.is_input:
                 #print('m2', end='-')
                 if fsm_mess.content_type == ContentType.TEXT:
-                    added_text = fsm_mess.text.lower()
+                    added_text = fsm_mess.text
                     current_state_params.media_type = MediaType.TEXT.value
                     current_state_params.input_text = added_text
                 elif fsm_mess.content_type == ContentType.PHOTO:

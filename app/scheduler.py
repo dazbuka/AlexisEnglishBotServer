@@ -42,13 +42,14 @@ async def send_reminders(bot: Bot):
         reply_kb = await keyboard_builder(menu_pack=[[button_main_menu]])
         await bot.send_message(DEVELOPER_ID, f'Time: {now_time} - {len(user_list)} active users', reply_markup=reply_kb)
 
-    if now_time[0:5] == '14:30' and now_date == '09.05.2025' :
-        for user in user_list:
-            reply_kb = await keyboard_builder(menu_pack=[[button_main_menu]])
-            await bot.send_message(user.telegram_id, f"AlexisEnglishBot has been updated. "
-                                                          f"It is recommended to clear the history and "
-                                                          f"start by tapping the main menu or start button.",
-                                                          reply_markup=reply_kb)
+    # рассылка уведомлений о критических обновлениях, при которых меняются необходимо обновление меню
+    # if now_time[0:5] == '14:30' and now_date == '09.05.2025' :
+    #     for user in user_list:
+    #         reply_kb = await keyboard_builder(menu_pack=[[button_main_menu]])
+    #         await bot.send_message(user.telegram_id, f"AlexisEnglishBot has been updated. "
+    #                                                       f"It is recommended to clear the history and "
+    #                                                       f"start by tapping the main menu or start button.",
+    #                                                       reply_markup=reply_kb)
 
 async def check_reminders(bot: Bot):
     while True:
