@@ -30,7 +30,9 @@ class RevisionState(StatesGroup):
 @revision_router.callback_query(F.data == CALL_REVISION_WORDS)
 @revision_router.callback_query(F.data == CALL_REVISION_COLLS)
 async def revision_start(call: CallbackQuery, state: FSMContext):
-    tasks: List['Task'] = await get_tasks(request_user_tg_id=call.from_user.id, sent=True, media_task_only=True)
+    # условие какие из коллокаций отображать - непонятно как лучше
+    # tasks: List['Task'] = await get_tasks(request_user_tg_id=call.from_user.id, sent=True, media_task_only=True)
+    tasks: List['Task'] = await get_tasks(request_user_tg_id=call.from_user.id, media_task_only=True)
     if tasks:
         user_colls = {task.media_id for task in tasks if task.media_id}
         user_words = {task.media.word_id for task in tasks if task.media.word_id}

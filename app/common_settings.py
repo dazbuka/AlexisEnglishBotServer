@@ -126,7 +126,7 @@ BTEXT_REVISION_COLLS_MENU= '📜Collocations'
 BTEXT_REVISION_COLLS_MENU_BACK = "📜Collocations"
 MESS_REVISION_COLLS = "👇Pick out what you'd like to revise or type a collocation you need to find"
 NUM_REVISION_COLLS_COLS = 1
-NUM_REVISION_COLLS_ROWS = 95
+NUM_REVISION_COLLS_ROWS = 20
 CHECK_REVISION_COLLS= '🟣'
 
 
