@@ -492,7 +492,7 @@ class InputStateParams:
         self.buttons_pack = [InlineKeyboardButton(
             text=f'{(date.today() + timedelta(days=i)).strftime("%d.%m.%Y")}',
             callback_data=f'{self.call_base}{(date.today() + timedelta(days=i)).strftime("%d.%m.%Y")}'
-            ) for i in range(1, 150)]
+            ) for i in range(-1, 150)]
 
     async def update_state_for_priority_capture(self) -> None:
         self.main_mess = MESS_CAPTURE_PRIRITY
