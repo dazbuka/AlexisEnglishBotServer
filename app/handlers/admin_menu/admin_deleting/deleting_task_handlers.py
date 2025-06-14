@@ -98,8 +98,14 @@ async def set_scheme_capture_words_from_call(call: CallbackQuery, state: FSMCont
 
     if fsm_state_str_curr == DeletingTask.capture_users_state.state:
         users_state: InputStateParams = await state.get_value('capture_users_state')
+
         current_user_id = users_state.set_of_items
-        user_id = next(iter(current_user_id))
+
+        if current_user_id:
+            user_id = next(iter(current_user_id))
+        else:
+            user_id = None
+
         tasks_state: InputStateParams = await state.get_value('capture_tasks_state')
         await tasks_state.update_state_for_deleting_tasks(user_id=user_id)
 

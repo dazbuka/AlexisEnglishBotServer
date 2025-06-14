@@ -19,7 +19,6 @@ async def send_reminders(bot: Bot):
         if now_time in interval_list:
             tasks : list[Task]= await rq.get_tasks_by_filters(user_id=user.id,
                                                               sent=False,
-                                                              media_task_only=True,
                                                               daily_and_missed=True)
             if tasks:
                 reply_kb = await keyboard_builder(menu_pack=[[button_quick_menu, button_main_menu]])
