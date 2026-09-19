@@ -40,9 +40,10 @@ async def set_user(message : Message):
                 await session.commit()
                 logger.info(f"Зарегистрировал пользователя с ID {message.chat.id} - {message.chat.username} "
                             f"- {message.chat.first_name} - {message.chat.last_name}!")
-                await bot.send_message(DEVELOPER_ID, f"Зарегистрировал пользователя с ID {message.from_user.id} - "
-                                               f"{message.from_user.username} - {message.from_user.first_name} "
-                                               f"- {message.from_user.last_name}!")
+                if DEVELOPER_ID:
+                    await bot.send_message(DEVELOPER_ID, f"Зарегистрировал пользователя с ID {message.from_user.id} - "
+                                                   f"{message.from_user.username} - {message.from_user.first_name} "
+                                                   f"- {message.from_user.last_name}!")
     except SQLAlchemyError as e:
         logger.error(f"Ошибка при добавлении пользователя "
                      f"{message.from_user.username} ({message.from_user.id}): {e}")
@@ -336,7 +337,7 @@ async def get_medias_by_filters(media_id: int = None,
                 selection = selection.filter(Media.media_type.startswith('test') == False)
 
             if offset:
-                selection = selection.order_by(Media.id.desc()).offset(limit)
+                selection = selection.order_by(Media.id.desc()).offset(offset)
 
             if limit:
                 if offset:

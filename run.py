@@ -21,8 +21,8 @@ async def start_bot():
     try:
         # await bot.send_message(DEVELOPER_ID, f'AlexisEnglishBot started')
         print("bot started")
-    except:
-        pass
+    except Exception as e:
+        logger.exception(f"Ошибка при запуске бота: {e}")
     logger.info("Бот успешно запущен.")
 
 
@@ -31,8 +31,8 @@ async def stop_bot():
     try:
         # await bot.send_message(DEVELOPER_ID, f'AlexisEnglishBot stopped')
         print("bot stopped")
-    except:
-        pass
+    except Exception as e:
+        logger.exception(f"Ошибка при остановке бота: {e}")
     logger.info("Бот остановлен!")
 
 

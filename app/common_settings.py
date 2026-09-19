@@ -313,7 +313,7 @@ CHECK_CAPTURE_PRIRITY= '🟣'
 
 
 # capturing day
-CALL_CAPTURE_DAYS = "capture_daуs_"
+CALL_CAPTURE_DAYS = "capture_days_"
 CALL_CHANGING_DAYS = "changing_days_"
 MESS_CAPTURE_DAYS = 'Выберите день изучения или введите с клавиатуры и отправьте боту часть слова'
 BTEXT_CHANGE_DAYS = "Изменить дeнь"
